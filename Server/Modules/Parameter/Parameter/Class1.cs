@@ -1,4 +1,4 @@
-﻿namespace Request;
+﻿namespace Parameter;
 
 public class Class1
 {
