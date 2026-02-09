@@ -15,7 +15,8 @@ public static class AssetModule
     {
         services.AddDbContext<AssetDbContext>((sp, options) =>
         {
-            options.AddInterceptors(sp.GetService<ISaveChangesInterceptor>());
+            var saveChangesInterceptor = sp.GetService<ISaveChangesInterceptor>();
+            if (saveChangesInterceptor is not null) options.AddInterceptors(saveChangesInterceptor);
             options.UseSqlServer(configuration.GetConnectionString("Database"), sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(AssetDbContext).Assembly.GetName().Name);
