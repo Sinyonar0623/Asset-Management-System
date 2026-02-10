@@ -1,4 +1,4 @@
-﻿using Asset.Data;
+﻿using Auth.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -6,29 +6,30 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Data.Extensions;
 
-namespace Asset;
+namespace Auth;
 
-public static class AssetModule
+public static class AuthModule
 {
-    public static IServiceCollection AddAssetModule(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuthModule(this IServiceCollection service, IConfiguration configuration)
     {
-        services.AddDbContext<AssetDbContext>((sp, options) =>
+        service.AddDbContext<AuthDbContext>((sp, options) =>
         {
             var saveChangesInterceptor = sp.GetService<ISaveChangesInterceptor>();
             if (saveChangesInterceptor is not null) options.AddInterceptors(saveChangesInterceptor);
             options.UseSqlServer(configuration.GetConnectionString("Database"), sqlOptions =>
             {
-                sqlOptions.MigrationsAssembly(typeof(AssetDbContext).Assembly.GetName().Name);
-                sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "asset");
+                sqlOptions.MigrationsAssembly(typeof(AuthDbContext).Assembly.GetName().Name);
+                sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "auth");
             });
         });
 
-        return services;
+        return service;
     }
-
-    public static IApplicationBuilder UseAssetModule(this IApplicationBuilder app)
+    
+    public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app)
     {
-        app.UseMigration<AssetDbContext>();
+        app.UseMigration<AuthDbContext>();
+
         return app;
     }
 }

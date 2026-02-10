@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Asset\Asset\Asset.csproj" />
     <ProjectReference Include="..\..\Shared\Shared\Shared.csproj" />
+    <ProjectReference Include="..\..\Modules\Auth\Auth\Auth.csproj" />
   </ItemGroup>
   
   <ItemGroup>
