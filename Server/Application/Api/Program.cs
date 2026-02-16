@@ -1,6 +1,8 @@
 using Asset;
 using Auth;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Shared.Data;
+using Shared.Data.Interceptors;
 using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
