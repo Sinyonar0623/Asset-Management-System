@@ -6,10 +6,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { ROLE_LABELS } from "../lib/auth";
 
 const TEST_ACCOUNTS = [
-  { username: "student1",  role: "student"  as const },
+  { username: "student1", role: "student" as const },
   { username: "lecturer1", role: "lecturer" as const },
   { username: "depthead1", role: "depthead" as const },
-  { username: "admin1",    role: "admin"    as const },
+  { username: "admin1", role: "admin" as const },
 ];
 
 export default function LoginPage() {
@@ -137,12 +137,11 @@ export default function LoginPage() {
                 <span className="font-medium text-slate-700 group-hover:text-blue-600">
                   {acc.username}
                 </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  acc.role === "student"  ? "bg-blue-100 text-blue-600" :
-                  acc.role === "lecturer" ? "bg-purple-100 text-purple-600" :
-                  acc.role === "depthead" ? "bg-red-100 text-red-600" :
-                  "bg-orange-100 text-orange-600"
-                }`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${acc.role === "student" ? "bg-blue-100 text-blue-600" :
+                    acc.role === "lecturer" ? "bg-purple-100 text-purple-600" :
+                      acc.role === "depthead" ? "bg-red-100 text-red-600" :
+                        "bg-orange-100 text-orange-600"
+                  }`}>
                   {ROLE_LABELS[acc.role]}
                 </span>
               </button>
