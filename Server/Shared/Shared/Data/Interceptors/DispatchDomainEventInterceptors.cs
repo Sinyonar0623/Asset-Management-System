@@ -7,22 +7,38 @@ namespace Shared.Data.Interceptors;
 
 public class DispatchDomainEventInterceptors(IMediator mediator) : SaveChangesInterceptor
 {
-    private async Task DispatchDomainEvent(DbContext? context)
+    public override InterceptionResult<int> SavingChanges(
+        DbContextEventData eventData,
+        InterceptionResult<int> result)
     {
-        if (context is null) return ;
+        DispatchDomainEventsAsync(eventData.Context, CancellationToken.None).GetAwaiter().GetResult();
+        return base.SavingChanges(eventData, result);
+    }
 
-        var aggregate = context.ChangeTracker
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
+    {
+        await DispatchDomainEventsAsync(eventData.Context, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    private async Task DispatchDomainEventsAsync(DbContext? context, CancellationToken cancellationToken)
+    {
+        if (context is null) return;
+
+        var aggregates = context.ChangeTracker
             .Entries<IAggregate>()
             .Where(e => e.Entity.DomainEvents.Any())
-            .Select(e => e.Entity);
-        
-        var domainEvents = aggregate
-            .SelectMany(e => e.DomainEvents)
+            .Select(e => e.Entity)
             .ToList();
 
-        aggregate.ToList().ForEach(e => e.ClearDomainEvents());
+        var domainEvents = aggregates
+            .SelectMany(e => e.ClearDomainEvents())
+            .ToList();
 
-        foreach(var domainEvent in domainEvents)
-            await mediator.Publish(domainEvent);
+        foreach (var domainEvent in domainEvents)
+            await mediator.Publish(domainEvent, cancellationToken);
     }
 }
