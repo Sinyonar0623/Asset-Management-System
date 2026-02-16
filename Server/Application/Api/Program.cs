@@ -1,20 +1,24 @@
 using Asset;
+using Auth;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Shared.Data;
+using Shared.Data.Interceptors;
 using Shared.Extensions;
-using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var assetAssembly = typeof(AssetModule).Assembly;
+var authAssembly = typeof(AuthModule).Assembly;
 
-builder.Services.AddCarterWithAssemblies(assetAssembly);
-builder.Services.AddMediatRWithAssemblies(assetAssembly);
+builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly);
+builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly);
 
 builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
     new SqlConnectionFactory(builder.Configuration.GetConnectionString("Database")!)
 );
 
 builder.Services.AddAssetModule(builder.Configuration);
+builder.Services.AddAuthModule(builder.Configuration);
 
 var app = builder.Build();
 

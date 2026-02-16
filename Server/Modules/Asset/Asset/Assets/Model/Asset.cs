@@ -21,6 +21,9 @@ public class Asset : Aggregate<long>
     private readonly List<AssetHistory> _histories = [];
     public IReadOnlyList<AssetHistory> Histories => _histories.AsReadOnly();
 
+    private readonly List<AssetComponent> _component = [];
+    public IReadOnlyList<AssetComponent> Components => _component.AsReadOnly();
+
     private Asset() {}
 
     private Asset(string realWorldId,
@@ -82,5 +85,13 @@ public class Asset : Aggregate<long>
     public void AddHistory(AssetHistory history)
     {
         _histories.Add(history);
+    }
+
+    public void AddComponent(List<AssetComponent> components)
+    {
+        foreach(var component in components)
+        {
+            _component.Add(component);
+        }
     }
 }

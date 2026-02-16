@@ -4,7 +4,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_SA_PASSWORD: ${DB_PASS}
     ports:
       - "1433:1433"
     volumes:
@@ -12,32 +12,14 @@ services:
       - mssql-backups:/var/opt/mssql/backups
     restart: unless-stopped
 
-  # mssql-backup:
-  #   image: mcr.microsoft.com/mssql-tools:latest
-  #   depends_on:
-  #     - sqlserver
-  #   environment:
-  #     MSSQL_HOST: sqlserver
-  #     MSSQL_PORT: "1433"
-  #     MSSQL_USER: "sa"
-  #     MSSQL_PASSWORD: ${MSSQL_SA_PASSWORD}
-  #     MSSQL_BACKUP_DATABASE: ${MSSQL_BACKUP_DATABASE:-master}
-  #     BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-3600}
-  #     RETENTION_DAYS: ${RETENTION_DAYS:-7}
-  #   volumes:
-  #     - mssql-backups:/var/opt/mssql/backups
-  #     - ./mssql-backup.sh:/scripts/mssql-backup.sh:ro
-  #   command: ["bash", "/scripts/mssql-backup.sh"]
-  #   restart: unless-stopped
-
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${SA_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     restart: unless-stopped
