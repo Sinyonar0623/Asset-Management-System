@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Shared.DDD;
 
 namespace Shared.Data.Repository;
@@ -8,6 +9,7 @@ public abstract class Repository<T, TId> : IRepository<T, TId> where T : class, 
 {
     protected readonly DbContext Context;
     protected readonly DbSet<T> DbSet;
+    private IDbContextTransaction? _currentTransaction;
 
     protected Repository(DbContext context)
     {
@@ -24,6 +26,35 @@ public abstract class Repository<T, TId> : IRepository<T, TId> where T : class, 
     {
         await DbSet.AddRangeAsync(entities, cancellationToken);
     }
+
+    public virtual async Task BeginTransaction(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction is not null)
+        {
+            return;
+        }
+
+        _currentTransaction = await Context.Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    public virtual async Task CommitTransaction(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _currentTransaction.CommitAsync(cancellationToken);
+        }
+        finally
+        {
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
+    }
+
 
     public virtual Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
     {
@@ -59,6 +90,12 @@ public abstract class Repository<T, TId> : IRepository<T, TId> where T : class, 
     {
         return await DbSet.FindAsync([id], cancellationToken);
     }
+
+    public virtual async Task SaveChangeAsync(CancellationToken cancellationToken = default)
+    {
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
 
     public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
