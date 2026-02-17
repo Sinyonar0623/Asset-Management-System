@@ -1,5 +1,10 @@
-﻿using Auth.Data;
+using Auth.Authentication.Model;
+using Auth.Data;
+using Auth.Data.Repository;
+using Auth.Data.UnitOfWork;
+using Auth.Service;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +17,11 @@ public static class AuthModule
 {
     public static IServiceCollection AddAuthModule(this IServiceCollection service, IConfiguration configuration)
     {
+        service.AddScoped<IPasswordHasher<UserName>, PasswordHasher<UserName>>();
+        service.AddScoped<IAuthRepository, AuthRepository>();
+        service.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
+        service.AddScoped<IAuthService, AuthService>();
+
         service.AddDbContext<AuthDbContext>((sp, options) =>
         {
             var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();
@@ -25,7 +35,7 @@ public static class AuthModule
 
         return service;
     }
-    
+
     public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app)
     {
         app.UseMigration<AuthDbContext>();

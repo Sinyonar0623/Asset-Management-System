@@ -17,26 +17,34 @@ public class UserName : Aggregate<Guid>
 
     private UserName(
         string username,
-        string email,
-        string pass
+        string email
     )
     {
         Username = username;
         Email = email;
-        PasswordHash = pass;
     }
 
     public static UserName Create(
         string username,
-        string email,
-        string pass
+        string email
     )
     {
         return new UserName(
             username,
-            email,
-            pass
+            email
         );
+    }
+
+    public void AssignRole(UserRole role)
+    {
+        ArgumentNullException.ThrowIfNull(role);
+        Role = role;
+    }
+
+    public void SetPasswordHash(string passwordHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        PasswordHash = passwordHash;
     }
 
     public void SetSession()
