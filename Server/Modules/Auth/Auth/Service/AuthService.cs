@@ -1,19 +1,23 @@
+using Auth.Authentication.Jwt;
 using Auth.Authentication.Model;
 using Auth.Data.Repository;
 using Auth.Data.UnitOfWork;
 using Auth.Dto;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Auth.Service;
 
 public class AuthService(
     IAuthRepository authRepository,
     IAuthUnitOfWork unitOfWork,
-    IPasswordHasher<UserName> passwordHasher) : IAuthService
+    IPasswordHasher<UserName> passwordHasher,
+    IOptions<JwtOptions> jwtOptions) : IAuthService
 {
     private readonly IPasswordHasher<UserName> _hasher = passwordHasher;
     private readonly IAuthRepository _repository = authRepository;
     private readonly IAuthUnitOfWork _unitOfWork = unitOfWork;
+    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<Guid> AddNewUser(UsernameDto user, CancellationToken cancellationToken)
     {
@@ -56,5 +60,65 @@ public class AuthService(
         }
 
         return newUser.Id;
+    }
+
+    public async Task<LoginAttemptDto> LoginAsync(string email, string password, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            return new LoginAttemptDto(false, null, "Email and password are required.", true, false);
+        }
+
+        var user = await _repository.GetByEmailAsync(email.Trim(), cancellationToken);
+        if (user is null || string.IsNullOrWhiteSpace(user.PasswordHash) || user.Role is null)
+        {
+            return new LoginAttemptDto(false, null, "Invalid email or password.", false, false);
+        }
+
+        var verified = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);
+        if (verified == PasswordVerificationResult.Failed)
+        {
+            return new LoginAttemptDto(false, null, "Invalid email or password.", false, false);
+        }
+
+        if (user.Session.HasValue && user.SessionActiveOn.HasValue)
+        {
+            var activeWindowMinutes = Math.Max(1, _jwtOptions.AccessTokenMinutes);
+            var sessionExpiredAt = user.SessionActiveOn.Value.AddMinutes(activeWindowMinutes);
+
+            if (sessionExpiredAt > DateTime.UtcNow)
+            {
+                return new LoginAttemptDto(false, null, "User is already logged in.", false, true);
+            }
+
+            user.ClearSession();
+        }
+
+        user.SetSession();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var loginUser = new LoginUserDto(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role.RoleCode,
+            user.Role.RoleName
+        );
+
+        return new LoginAttemptDto(true, loginUser, null, false, false);
+    }
+
+    public async Task<bool> LogoutAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _repository.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return false;
+        }
+
+        user.ClearSession();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 }

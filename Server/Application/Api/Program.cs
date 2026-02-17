@@ -1,6 +1,10 @@
+using System.Text;
 using Asset;
 using Auth;
+using Auth.Authentication.Jwt;
 using Carter;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Parameter;
 using Shared.Data;
 using Shared.Extensions;
@@ -14,6 +18,29 @@ var parameterAssembly = typeof(ParameterModule).Assembly;
 builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
 builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
 
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+var jwtIssuer = jwtSection["Issuer"] ?? string.Empty;
+var jwtAudience = jwtSection["Audience"] ?? string.Empty;
+var jwtKey = jwtSection["Key"] ?? string.Empty;
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+builder.Services.AddAuthorization();
+
 builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
     new SqlConnectionFactory(builder.Configuration.GetConnectionString("Database")!)
 );
@@ -23,6 +50,9 @@ builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddParameterModule(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapCarter();
 

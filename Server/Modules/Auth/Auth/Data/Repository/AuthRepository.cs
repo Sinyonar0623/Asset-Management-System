@@ -14,6 +14,13 @@ public class AuthRepository(AuthDbContext dbContext) : Repository<UserName, Guid
             .AnyAsync(x => x.Username == username || x.Email == email, cancellationToken);
     }
 
+    public async Task<UserName?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _context.Auth
+            .Include(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+    }
+
     public async Task<UserRole?> GetRoleByCodeAsync(string roleCode, CancellationToken cancellationToken = default)
     {
         return await _context.Set<UserRole>()

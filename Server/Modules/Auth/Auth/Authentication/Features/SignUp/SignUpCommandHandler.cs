@@ -3,22 +3,22 @@ using Auth.Service;
 using Mapster;
 using Shared.CQRS;
 
-namespace Auth.Authentication.Features.CreateUser;
+namespace Auth.Authentication.Features.SignUp;
 
-public sealed class CreateUserCommandHandler(IAuthService authService)
-    : ICommandHandler<CreateUserCommand, CreateUserResult>
+public sealed class SignUpCommandHandler(IAuthService authService)
+    : ICommandHandler<SignUpCommand, SignUpResult>
 {
 
     private readonly IAuthService _service = authService;
 
-    public async Task<CreateUserResult> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<SignUpResult> Handle(SignUpCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Username)
             || string.IsNullOrWhiteSpace(request.Email)
             || string.IsNullOrWhiteSpace(request.Password)
             || string.IsNullOrWhiteSpace(request.RoleCode))
         {
-            return new CreateUserResult(false, null, "Username, email, password and roleCode are required.");
+            return new SignUpResult(false, null, "Username, email, password and roleCode are required.");
         }
 
         var user = request.Adapt<UsernameDto>();
@@ -35,7 +35,7 @@ public sealed class CreateUserCommandHandler(IAuthService authService)
 
         // if (userExists)
         // {
-        //     return new CreateUserResult(false, null, "Username or email already exists.");
+        //     return new SignUpResult(false, null, "Username or email already exists.");
         // }
 
         // var role = await dbContext.Set<UserRole>()
@@ -43,7 +43,7 @@ public sealed class CreateUserCommandHandler(IAuthService authService)
 
         // if (role is null)
         // {
-        //     return new CreateUserResult(false, null, "Role not found.");
+        //     return new SignUpResult(false, null, "Role not found.");
         // }
 
         // var user = UserName.Create(username, email, string.Empty);
@@ -54,6 +54,6 @@ public sealed class CreateUserCommandHandler(IAuthService authService)
         // await dbContext.Auth.AddAsync(user, cancellationToken);
         // await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new CreateUserResult(true, result, null);
+        return new SignUpResult(true, result, null);
     }
 }

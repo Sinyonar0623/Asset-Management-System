@@ -1,7 +1,7 @@
 using Mapster;
 using Auth.Dto;
 using Auth.Authentication.Model;
-using Auth.Authentication.Features.CreateUser;
+using Auth.Authentication.Features.SignUp;
 
 namespace Auth.Configuration;
 
@@ -16,7 +16,7 @@ public static class MappingConfiguration
                 src.Email
             ));
 
-        TypeAdapterConfig<CreateUserRequest, UsernameDto>
+        TypeAdapterConfig<SignUpRequest, UsernameDto>
             .NewConfig()
             .ConstructUsing(src => new UsernameDto(
                 src.Username,

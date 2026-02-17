@@ -1,3 +1,4 @@
+using Auth.Authentication.Jwt;
 using Auth.Authentication.Model;
 using Auth.Data;
 using Auth.Data.Repository;
@@ -17,10 +18,13 @@ public static class AuthModule
 {
     public static IServiceCollection AddAuthModule(this IServiceCollection service, IConfiguration configuration)
     {
+        service.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+
         service.AddScoped<IPasswordHasher<UserName>, PasswordHasher<UserName>>();
         service.AddScoped<IAuthRepository, AuthRepository>();
         service.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
         service.AddScoped<IAuthService, AuthService>();
+        service.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         service.AddDbContext<AuthDbContext>((sp, options) =>
         {
