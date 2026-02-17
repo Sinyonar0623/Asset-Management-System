@@ -1,17 +1,45 @@
+using System.Text;
 using Asset;
 using Auth;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Auth.Authentication.Jwt;
+using Carter;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Parameter;
 using Shared.Data;
-using Shared.Data.Interceptors;
 using Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var assetAssembly = typeof(AssetModule).Assembly;
 var authAssembly = typeof(AuthModule).Assembly;
+var parameterAssembly = typeof(ParameterModule).Assembly;
 
-builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly);
-builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly);
+builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
+builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
+
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+var jwtIssuer = jwtSection["Issuer"] ?? string.Empty;
+var jwtAudience = jwtSection["Audience"] ?? string.Empty;
+var jwtKey = jwtSection["Key"] ?? string.Empty;
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
     new SqlConnectionFactory(builder.Configuration.GetConnectionString("Database")!)
@@ -19,8 +47,13 @@ builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
 
 builder.Services.AddAssetModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddParameterModule(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapCarter();
 
 app.Run();

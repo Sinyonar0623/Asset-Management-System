@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Shared.Data.Extensions;
 using Shared.Data.Outbox.Configuration;
 using Shared.Outbox.Model;
 
@@ -17,6 +18,7 @@ public class AssetDbContext(DbContextOptions<AssetDbContext> options) : DbContex
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
         modelBuilder.ApplyConfiguration(new OutboxConfiguration(excludeFromMigrations: false));
+        modelBuilder.ApplyAuditConventions();
 
         base.OnModelCreating(modelBuilder);
     }

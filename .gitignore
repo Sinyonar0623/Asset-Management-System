@@ -52,3 +52,6 @@ next-env.d.ts
 *.sln.docstates
 *.rsuser
 *.sln.iml
+
+# local build artifacts
+/artifacts/
