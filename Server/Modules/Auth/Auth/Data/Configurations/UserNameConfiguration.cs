@@ -11,7 +11,9 @@ public class AuthConfiguration : IEntityTypeConfiguration<UserName>
         builder.ToTable("UserName");
 
         builder.HasKey(a => a.Id);
-        builder.Property(a => a.Id).ValueGeneratedOnAdd();
+        builder.Property(a => a.Id)
+            .HasDefaultValueSql("NEWID()")
+            .ValueGeneratedOnAdd();
 
         builder.Property<Guid>("RoleId").IsRequired();
 

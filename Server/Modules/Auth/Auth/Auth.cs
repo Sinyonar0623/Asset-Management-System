@@ -14,8 +14,8 @@ public static class AuthModule
     {
         service.AddDbContext<AuthDbContext>((sp, options) =>
         {
-            var saveChangesInterceptor = sp.GetService<ISaveChangesInterceptor>();
-            if (saveChangesInterceptor is not null) options.AddInterceptors(saveChangesInterceptor);
+            var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();
+            options.AddInterceptors(saveChangesInterceptors);
             options.UseSqlServer(configuration.GetConnectionString("Database"), sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(AuthDbContext).Assembly.GetName().Name);

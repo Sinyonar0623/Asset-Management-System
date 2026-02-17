@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Shared.Data.Extensions;
+using System.Reflection;
 
 namespace Parameter.Data;
 
@@ -8,6 +10,10 @@ public class ParameterDbContext(DbContextOptions<ParameterDbContext> options) : 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("parameter");
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAuditConventions();
+
         base.OnModelCreating(modelBuilder);
     }
 }

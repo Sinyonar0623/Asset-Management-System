@@ -4,6 +4,7 @@ using Asset.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Asset.Data.Migrations
 {
     [DbContext(typeof(AssetDbContext))]
-    partial class AssetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260217035033_ConfigureAuditFields")]
+    partial class ConfigureAuditFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,7 +95,10 @@ namespace Asset.Data.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("UpdateBy")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("SYSTEM");
 
                     b.Property<DateTime?>("UpdateOn")
                         .HasColumnType("datetime2");
@@ -148,7 +154,10 @@ namespace Asset.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdateBy")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("SYSTEM");
 
                     b.Property<DateTime?>("UpdateOn")
                         .HasColumnType("datetime2");
@@ -205,7 +214,10 @@ namespace Asset.Data.Migrations
                         .HasColumnType("nvarchar(512)");
 
                     b.Property<string>("UpdateBy")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("SYSTEM");
 
                     b.Property<DateTime?>("UpdateOn")
                         .HasColumnType("datetime2");
@@ -278,6 +290,7 @@ namespace Asset.Data.Migrations
                                 .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("UpdateBy")
+                                .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
                             b1.Property<DateTime?>("UpdateOn")
