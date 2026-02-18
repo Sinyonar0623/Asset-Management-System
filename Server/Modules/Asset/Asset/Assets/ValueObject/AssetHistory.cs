@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace Asset.Assets.ValueObject;
 
 public class AssetHistory
@@ -12,24 +10,28 @@ public class AssetHistory
     private AssetHistory(
         string purpose,
         string remark,
-        Guid approveBy
+        Guid approveBy,
+        DateTime approveAt
     )
     {
         Purpose = purpose;
         Remark = remark;
         ApproveBy = approveBy;
+        ApproveAt = approveAt;
     }
 
     public static AssetHistory Create(
         string purpose,
         string remark,
-        Guid approveBy
+        Guid approveBy,
+        DateTime? approveAt = null
     )
     {
         return new AssetHistory(
             purpose,
             remark,
-            approveBy
+            approveBy,
+            approveAt ?? DateTime.UtcNow
         );
     }
 }

@@ -4,11 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Asset.Data.Configurations;
 
-public class AssetLaboratoryConfiguration : IEntityTypeConfiguration<AssetLaboratory>
+public class LaboratoryConfiguration : IEntityTypeConfiguration<Laboratory>
 {
-    public void Configure(EntityTypeBuilder<AssetLaboratory> builder)
+    public void Configure(EntityTypeBuilder<Laboratory> builder)
     {
         builder.ToTable("Laboratories");
+
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).UseIdentityColumn();
 

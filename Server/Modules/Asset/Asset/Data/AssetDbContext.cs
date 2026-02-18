@@ -8,7 +8,9 @@ namespace Asset.Data;
 
 public class AssetDbContext(DbContextOptions<AssetDbContext> options) : DbContext(options)
 {
-    public DbSet<Assets.Model.Asset> Assets => Set<Assets.Model.Asset>();
+    public DbSet<Assets.Model.Laboratory> Laboratories => Set<Assets.Model.Laboratory>();
+    public DbSet<Assets.Model.AssetModel> AssetModels => Set<Assets.Model.AssetModel>();
+    public DbSet<Assets.Model.AssetUnit> AssetUnits => Set<Assets.Model.AssetUnit>();
     public DbSet<Outbox> OutboxMessages => Set<Outbox>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

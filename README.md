@@ -119,6 +119,65 @@ sequenceDiagram
     end
 ```
 
+### 4.5 Asset Data Model (Current)
+
+The Asset module now uses a simple 4-table structure:
+- `Laboratories` (lab master)
+- `AssetModels` (what users see: name/description/category in a lab)
+- `AssetUnits` (physical units with per-unit status)
+- `AssetHistories` (status/action history per unit)
+
+```mermaid
+erDiagram
+    LABORATORIES ||--o{ ASSET_MODELS : owns
+    ASSET_MODELS ||--o{ ASSET_UNITS : has
+    ASSET_UNITS ||--o{ ASSET_HISTORIES : has
+
+    LABORATORIES {
+      bigint Id PK
+      string LaboratoryName
+      string RoomNo
+      guid TeacherId
+      string Description
+    }
+
+    ASSET_MODELS {
+      bigint Id PK
+      bigint LaboratoryId FK
+      string Name
+      string Description
+      string Category "PATSADU|WATSADU"
+      bool IsAvailable
+    }
+
+    ASSET_UNITS {
+      bigint Id PK
+      bigint AssetModelId FK
+      string AssetTag
+      string SerialNo
+      string AvailabilityStatus "AVAILABLE|IN_USE"
+      string OperationalStatus "READY|NOT_READY|UNDER_REPAIR"
+      string Remark
+      guid OwnerId
+    }
+
+    ASSET_HISTORIES {
+      bigint Id PK
+      bigint AssetUnitId FK
+      string Purpose
+      string Remark
+      guid ApproveBy
+      datetime ApproveAt
+    }
+```
+
+Status meaning in `AssetUnits`:
+- `AvailabilityStatus`: current usage state (`AVAILABLE`, `IN_USE`)
+- `OperationalStatus`: technical readiness (`READY`, `NOT_READY`, `UNDER_REPAIR`)
+
+Recommended rule for UI:
+- `AssetModels.IsAvailable = true` when at least one unit is `AVAILABLE` and `READY`
+
 ## 5) API Endpoints (Current)
 
 Base URL (default local): `http://localhost:5176`
