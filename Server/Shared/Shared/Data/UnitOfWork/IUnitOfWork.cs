@@ -1,6 +1,8 @@
-namespace Auth.Data.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 
-public interface IAuthUnitOfWork
+namespace Shared.Data.UnitOfWork;
+
+public interface IUnitOfWork<TDbContext> where TDbContext : DbContext
 {
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

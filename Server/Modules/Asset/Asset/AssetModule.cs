@@ -1,10 +1,12 @@
-﻿using Asset.Data;
+using Asset.Data;
+using Asset.Data.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Data.Extensions;
+using Shared.Data.UnitOfWork;
 
 namespace Asset;
 
@@ -12,6 +14,11 @@ public static class AssetModule
 {
     public static IServiceCollection AddAssetModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<ILaboratoryRepository, LaboratoryRepository>();
+        services.AddScoped<IAssetModelRepository, AssetModelRepository>();
+        services.AddScoped<IAssetUnitRepository, AssetUnitRepository>();
+        services.AddScoped<IUnitOfWork<AssetDbContext>, UnitOfWork<AssetDbContext>>();
+
         services.AddDbContext<AssetDbContext>((sp, options) =>
         {
             var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();

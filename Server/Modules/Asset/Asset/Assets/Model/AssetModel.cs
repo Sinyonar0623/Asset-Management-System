@@ -42,4 +42,16 @@ public class AssetModel : Aggregate<long>
     {
         IsAvailable = isAvailable;
     }
+
+    public void Update(
+        long laboratoryId,
+        string name,
+        string description,
+        string category)
+    {
+        LaboratoryId = laboratoryId;
+        Name = name;
+        Description = description;
+        Category = category;
+    }
 }

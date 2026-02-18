@@ -2,7 +2,6 @@ using Auth.Authentication.Jwt;
 using Auth.Authentication.Model;
 using Auth.Data;
 using Auth.Data.Repository;
-using Auth.Data.UnitOfWork;
 using Auth.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Data.Extensions;
+using Shared.Data.UnitOfWork;
 
 namespace Auth;
 
@@ -21,9 +21,13 @@ public static class AuthModule
         service.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
 
         service.AddScoped<IPasswordHasher<UserName>, PasswordHasher<UserName>>();
+
         service.AddScoped<IAuthRepository, AuthRepository>();
-        service.AddScoped<IAuthUnitOfWork, AuthUnitOfWork>();
+
+        service.AddScoped<IUnitOfWork<AuthDbContext>, UnitOfWork<AuthDbContext>>();
+
         service.AddScoped<IAuthService, AuthService>();
+        
         service.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         service.AddDbContext<AuthDbContext>((sp, options) =>

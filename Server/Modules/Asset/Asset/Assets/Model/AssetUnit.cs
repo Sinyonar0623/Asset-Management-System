@@ -63,6 +63,24 @@ public class AssetUnit : Aggregate<long>
         OperationalStatus = operationalStatus;
     }
 
+    public void Update(
+        long assetModelId,
+        string assetTag,
+        string serialNo,
+        string availabilityStatus,
+        string operationalStatus,
+        string remark,
+        Guid ownerId)
+    {
+        AssetModelId = assetModelId;
+        AssetTag = assetTag;
+        SerialNo = serialNo;
+        AvailabilityStatus = availabilityStatus;
+        OperationalStatus = operationalStatus;
+        Remark = remark;
+        OwnerId = ownerId;
+    }
+
     public void AddHistory(AssetHistory history)
     {
         _histories.Add(history);

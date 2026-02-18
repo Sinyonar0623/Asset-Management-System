@@ -1,22 +1,23 @@
 using Auth.Authentication.Jwt;
 using Auth.Authentication.Model;
+using Auth.Data;
 using Auth.Data.Repository;
-using Auth.Data.UnitOfWork;
 using Auth.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Shared.Data.UnitOfWork;
 
 namespace Auth.Service;
 
 public class AuthService(
     IAuthRepository authRepository,
-    IAuthUnitOfWork unitOfWork,
+    IUnitOfWork<AuthDbContext> unitOfWork,
     IPasswordHasher<UserName> passwordHasher,
     IOptions<JwtOptions> jwtOptions) : IAuthService
 {
     private readonly IPasswordHasher<UserName> _hasher = passwordHasher;
     private readonly IAuthRepository _repository = authRepository;
-    private readonly IAuthUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IUnitOfWork<AuthDbContext> _unitOfWork = unitOfWork;
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<Guid> AddNewUser(UsernameDto user, CancellationToken cancellationToken)

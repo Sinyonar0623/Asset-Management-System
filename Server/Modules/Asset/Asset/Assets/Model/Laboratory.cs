@@ -31,4 +31,16 @@ public class Laboratory : Aggregate<long>
     {
         return new Laboratory(laboratoryName, roomNo, teacherId, description);
     }
+
+    public void Update(
+        string laboratoryName,
+        string roomNo,
+        Guid teacherId,
+        string description)
+    {
+        LaboratoryName = laboratoryName;
+        RoomNo = roomNo;
+        TeacherId = teacherId;
+        Description = description;
+    }
 }

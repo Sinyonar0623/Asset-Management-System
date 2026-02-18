@@ -1,14 +1,20 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace Auth.Data.UnitOfWork;
+namespace Shared.Data.UnitOfWork;
 
-public sealed class AuthUnitOfWork(AuthDbContext dbContext) : IAuthUnitOfWork
+public sealed class UnitOfWork<TDbContext>(TDbContext dbContext) : IUnitOfWork<TDbContext>
+    where TDbContext : DbContext
 {
     private IDbContextTransaction? _transaction;
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction is not null) return;
+        if (_transaction is not null)
+        {
+            return;
+        }
+
         _transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
     }
 
@@ -19,7 +25,10 @@ public sealed class AuthUnitOfWork(AuthDbContext dbContext) : IAuthUnitOfWork
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction is null) return;
+        if (_transaction is null)
+        {
+            return;
+        }
 
         try
         {
@@ -34,7 +43,10 @@ public sealed class AuthUnitOfWork(AuthDbContext dbContext) : IAuthUnitOfWork
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction is null) return;
+        if (_transaction is null)
+        {
+            return;
+        }
 
         try
         {
