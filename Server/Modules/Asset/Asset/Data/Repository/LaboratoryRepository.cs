@@ -5,14 +5,14 @@ using Shared.Data.Repository;
 namespace Asset.Data.Repository;
 
 public class LaboratoryRepository(AssetDbContext dbContext)
-    : Repository<Laboratory, long>(dbContext), ILaboratoryRepository
+    : Repository<Laboratory, Guid>(dbContext), ILaboratoryRepository
 {
     private readonly AssetDbContext _context = dbContext;
 
-    public async Task<bool> HasAssetModelsAsync(long laboratoryId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasAssetModelsAsync(Guid laboratoryId, CancellationToken cancellationToken = default)
     {
         return await _context.AssetModels
             .AsNoTracking()
-            .AnyAsync(x => x.LaboratoryId == laboratoryId, cancellationToken);
+            .AnyAsync(x => x.Id == laboratoryId, cancellationToken);
     }
 }

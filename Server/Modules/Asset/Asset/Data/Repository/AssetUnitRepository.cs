@@ -5,20 +5,21 @@ using Shared.Data.Repository;
 namespace Asset.Data.Repository;
 
 public class AssetUnitRepository(AssetDbContext dbContext)
-    : Repository<AssetUnit, long>(dbContext), IAssetUnitRepository
+    : Repository<AssetUnit, Guid>(dbContext), IAssetUnitRepository
 {
     private readonly AssetDbContext _context = dbContext;
 
-    public async Task<AssetUnit?> GetByIdWithHistoriesAsync(long assetUnitId, CancellationToken cancellationToken = default)
+    public async Task<AssetUnit?> GetByIdWithHistoriesAsync(Guid assetUnitId, CancellationToken cancellationToken = default)
     {
         return await _context.AssetUnits
             .Include(x => x.Histories)
+            .Include(x => x.Condition)
             .FirstOrDefaultAsync(x => x.Id == assetUnitId, cancellationToken);
     }
 
     public async Task<bool> AssetTagExistsAsync(
         string assetTag,
-        long? excludeAssetUnitId = null,
+        Guid? excludeAssetUnitId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.AssetUnits
@@ -35,7 +36,7 @@ public class AssetUnitRepository(AssetDbContext dbContext)
 
     public async Task<bool> SerialNoExistsAsync(
         string serialNo,
-        long? excludeAssetUnitId = null,
+        Guid? excludeAssetUnitId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.AssetUnits

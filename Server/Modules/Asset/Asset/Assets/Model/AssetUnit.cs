@@ -3,17 +3,19 @@ using Shared.DDD;
 
 namespace Asset.Assets.Model;
 
-public class AssetUnit : Aggregate<long>
+public class AssetUnit : Aggregate<Guid>
 {
-    public long AssetModelId { get; private set; }
     public string AssetTag { get; private set; } = null!;
     public string SerialNo { get; private set; } = null!;
+    public string Name { get; private set; } = null!;
+    public string Brand { get; private set; } = null!;
     public string AvailabilityStatus { get; private set; } = null!;
     public string OperationalStatus { get; private set; } = null!;
     public string Remark { get; private set; } = null!;
     public Guid OwnerId { get; private set; }
 
-    public AssetModel AssetModel { get; private set; } = default!;
+    public Asset Asset { get; private set; } = default!;
+    public AssetUnitCondition? Condition { get; private set; }
 
     private readonly List<AssetHistory> _histories = [];
     public IReadOnlyList<AssetHistory> Histories => _histories.AsReadOnly();
@@ -21,17 +23,19 @@ public class AssetUnit : Aggregate<long>
     private AssetUnit() {}
 
     private AssetUnit(
-        long assetModelId,
         string assetTag,
         string serialNo,
+        string name,
+        string brand,
         string availabilityStatus,
         string operationalStatus,
         string remark,
         Guid ownerId)
     {
-        AssetModelId = assetModelId;
         AssetTag = assetTag;
         SerialNo = serialNo;
+        Name = name;
+        Brand = brand;
         AvailabilityStatus = availabilityStatus;
         OperationalStatus = operationalStatus;
         Remark = remark;
@@ -39,18 +43,20 @@ public class AssetUnit : Aggregate<long>
     }
 
     public static AssetUnit Create(
-        long assetModelId,
         string assetTag,
         string serialNo,
+        string name,
+        string brand,
         string availabilityStatus,
         string operationalStatus,
         string remark,
         Guid ownerId)
     {
         return new AssetUnit(
-            assetModelId,
             assetTag,
             serialNo,
+            name,
+            brand,
             availabilityStatus,
             operationalStatus,
             remark,
@@ -64,7 +70,6 @@ public class AssetUnit : Aggregate<long>
     }
 
     public void Update(
-        long assetModelId,
         string assetTag,
         string serialNo,
         string availabilityStatus,
@@ -72,7 +77,6 @@ public class AssetUnit : Aggregate<long>
         string remark,
         Guid ownerId)
     {
-        AssetModelId = assetModelId;
         AssetTag = assetTag;
         SerialNo = serialNo;
         AvailabilityStatus = availabilityStatus;
@@ -84,5 +88,41 @@ public class AssetUnit : Aggregate<long>
     public void AddHistory(AssetHistory history)
     {
         _histories.Add(history);
+    }
+
+    public void SetCondition(
+        string reason,
+        DateTime? conditionFrom,
+        bool isConditionFromUnknown,
+        DateTime? conditionTo,
+        bool isConditionToUnknown)
+    {
+        if (Condition is null)
+        {
+            Condition = AssetUnitCondition.Create(
+                reason,
+                conditionFrom,
+                isConditionFromUnknown,
+                conditionTo,
+                isConditionToUnknown);
+            return;
+        }
+
+        Condition.Update(
+            reason,
+            conditionFrom,
+            isConditionFromUnknown,
+            conditionTo,
+            isConditionToUnknown);
+    }
+
+    public void ClearCondition()
+    {
+        Condition = null;
+    }
+
+    public void AssignAssets(Asset asset)
+    {
+        Asset = asset;
     }
 }

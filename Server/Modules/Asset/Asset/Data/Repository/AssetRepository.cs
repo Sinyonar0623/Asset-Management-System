@@ -4,20 +4,20 @@ using Shared.Data.Repository;
 
 namespace Asset.Data.Repository;
 
-public class AssetModelRepository(AssetDbContext dbContext)
-    : Repository<AssetModel, long>(dbContext), IAssetModelRepository
+public class AssetRepository(AssetDbContext dbContext)
+    : Repository<Assets.Model.Asset, Guid>(dbContext), IAssetRepository
 {
     private readonly AssetDbContext _context = dbContext;
 
     public async Task<bool> NameExistsInLaboratoryAsync(
-        long laboratoryId,
+        Guid laboratoryId,
         string name,
-        long? excludeAssetModelId = null,
+        Guid? excludeAssetModelId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.AssetModels
+        var query = _context.Laboratories
             .AsNoTracking()
-            .Where(x => x.LaboratoryId == laboratoryId && x.Name == name);
+            .Where(x => x.Id == laboratoryId );
 
         if (excludeAssetModelId.HasValue)
         {
@@ -27,14 +27,7 @@ public class AssetModelRepository(AssetDbContext dbContext)
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<bool> HasAssetUnitsAsync(long assetModelId, CancellationToken cancellationToken = default)
-    {
-        return await _context.AssetUnits
-            .AsNoTracking()
-            .AnyAsync(x => x.AssetModelId == assetModelId, cancellationToken);
-    }
-
-    public async Task SyncAvailabilityAsync(long assetModelId, CancellationToken cancellationToken = default)
+    public async Task SyncAvailabilityAsync(Guid assetModelId, CancellationToken cancellationToken = default)
     {
         var assetModel = await _context.AssetModels
             .FirstOrDefaultAsync(x => x.Id == assetModelId, cancellationToken);
@@ -47,7 +40,7 @@ public class AssetModelRepository(AssetDbContext dbContext)
         var isAvailable = await _context.AssetUnits
             .AsNoTracking()
             .AnyAsync(
-                x => x.AssetModelId == assetModelId
+                x => x.Id == assetModelId
                      && x.AvailabilityStatus == "AVAILABLE"
                      && x.OperationalStatus == "READY",
                 cancellationToken);

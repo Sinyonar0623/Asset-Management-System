@@ -2,10 +2,12 @@ namespace Asset.Assets.ValueObject;
 
 public class AssetHistory
 {
-    public string Purpose { get; }
-    public string Remark { get; }
-    public Guid ApproveBy { get; }
-    public DateTime ApproveAt { get; }
+    public string Purpose { get; private set; } = null!;
+    public string Remark { get; private set; } = null!;
+    public Guid ApproveBy { get; private set; }
+    public DateTime ApproveAt { get; private set; }
+
+    private AssetHistory() {}
 
     private AssetHistory(
         string purpose,

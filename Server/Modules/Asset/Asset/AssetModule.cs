@@ -15,7 +15,7 @@ public static class AssetModule
     public static IServiceCollection AddAssetModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<ILaboratoryRepository, LaboratoryRepository>();
-        services.AddScoped<IAssetModelRepository, AssetModelRepository>();
+        services.AddScoped<IAssetRepository, AssetRepository>();
         services.AddScoped<IAssetUnitRepository, AssetUnitRepository>();
         services.AddScoped<IUnitOfWork<AssetDbContext>, UnitOfWork<AssetDbContext>>();
 

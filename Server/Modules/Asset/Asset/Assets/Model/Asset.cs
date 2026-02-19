@@ -2,9 +2,8 @@ using Shared.DDD;
 
 namespace Asset.Assets.Model;
 
-public class AssetModel : Aggregate<long>
+public class Asset : Aggregate<Guid>
 {
-    public long LaboratoryId { get; private set; }
     public string Name { get; private set; } = null!;
     public string Description { get; private set; } = null!;
     public string Category { get; private set; } = null!;
@@ -12,30 +11,28 @@ public class AssetModel : Aggregate<long>
 
     public Laboratory Laboratory { get; private set; } = default!;
 
-    private AssetModel() {}
+    private Asset() {}
 
-    private AssetModel(
-        long laboratoryId,
+    private Asset(
         string name,
         string description,
         string category,
         bool isAvailable)
     {
-        LaboratoryId = laboratoryId;
         Name = name;
         Description = description;
         Category = category;
         IsAvailable = isAvailable;
     }
 
-    public static AssetModel Create(
-        long laboratoryId,
+    public static Asset Create(
         string name,
         string description,
         string category,
-        bool isAvailable = false)
+        bool isAvailable = false
+    )
     {
-        return new AssetModel(laboratoryId, name, description, category, isAvailable);
+        return new Asset( name, description, category, isAvailable);
     }
 
     public void SetAvailability(bool isAvailable)
@@ -44,14 +41,18 @@ public class AssetModel : Aggregate<long>
     }
 
     public void Update(
-        long laboratoryId,
         string name,
         string description,
-        string category)
+        string category
+    )
     {
-        LaboratoryId = laboratoryId;
         Name = name;
         Description = description;
         Category = category;
+    }
+
+    public void AssignLaboratory (Laboratory lab)
+    {
+        Laboratory = lab;
     }
 }

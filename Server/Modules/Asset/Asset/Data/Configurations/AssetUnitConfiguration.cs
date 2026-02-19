@@ -11,7 +11,8 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
         builder.ToTable("AssetUnits");
 
         builder.HasKey(u => u.Id);
-        builder.Property(u => u.Id).UseIdentityColumn();
+        builder.Property(u => u.Id).ValueGeneratedOnAdd();
+        builder.Property(u => u.Id).HasColumnName("AssetUnitId");
 
         builder.Property(u => u.AssetTag).HasMaxLength(100).IsRequired();
         builder.Property(u => u.SerialNo).HasMaxLength(100).IsRequired();
@@ -19,36 +20,28 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
         builder.Property(u => u.OperationalStatus).HasMaxLength(20).IsRequired();
         builder.Property(u => u.Remark).HasMaxLength(500).IsRequired();
         builder.Property(u => u.OwnerId).IsRequired();
-
-        builder.HasOne(u => u.AssetModel)
-            .WithMany()
-            .HasForeignKey(u => u.AssetModelId)
-            .OnDelete(DeleteBehavior.Restrict)
-            .HasConstraintName("FK_AssetUnits_AssetModels_AssetModelId");
-
-        builder.HasIndex(u => u.AssetModelId);
         builder.HasIndex(u => u.AssetTag).IsUnique();
         builder.HasIndex(u => u.SerialNo).IsUnique();
 
-        builder.OwnsMany(u => u.Histories, histories =>
+        builder.Property<Guid>("AssetId");
+        builder.HasIndex("AssetId");
+
+        builder.HasOne(a => a.Asset)
+            .WithMany()
+            .HasForeignKey("AssetId")
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(a => a.Condition)
+            .WithOne(c => c.AssetUnit)
+            .HasForeignKey<AssetUnitCondition>("AssetUnitId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.OwnsMany(a => a.Histories , histories =>
         {
-            histories.ToTable("AssetHistories");
-
+            histories.ToTable("AssetUnitHistories");
             histories.WithOwner().HasForeignKey("AssetUnitId");
-
-            histories.Property<long>("Id").UseIdentityColumn();
-            histories.HasKey("Id");
-
-            histories.Property(x => x.Purpose).HasMaxLength(200).IsRequired();
-            histories.Property(x => x.Remark).HasMaxLength(500).IsRequired();
-            histories.Property(x => x.ApproveBy).IsRequired();
-            histories.Property(x => x.ApproveAt).IsRequired();
-
-            histories.HasIndex("AssetUnitId");
+            histories.Property<int>("Id");
+            histories.HasKey("AssetUnitId", "Id");
         });
-
-        builder.Navigation(u => u.Histories)
-            .HasField("_histories")
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

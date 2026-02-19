@@ -3,7 +3,7 @@ using Shared.Data.Repository;
 
 namespace Asset.Data.Repository;
 
-public interface ILaboratoryRepository : IRepository<Laboratory, long>
+public interface ILaboratoryRepository : IRepository<Laboratory, Guid>
 {
-    Task<bool> HasAssetModelsAsync(long laboratoryId, CancellationToken cancellationToken = default);
+    Task<bool> HasAssetModelsAsync(Guid laboratoryId, CancellationToken cancellationToken = default);
 }

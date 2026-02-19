@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Asset.Data.Migrations
 {
     [DbContext(typeof(AssetDbContext))]
-    [Migration("20260218114431_RedesignAssetModelAndUnit")]
-    partial class RedesignAssetModelAndUnit
+    [Migration("20260219094148_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,13 +26,12 @@ namespace Asset.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Asset.Assets.Model.AssetModel", b =>
+            modelBuilder.Entity("Asset.Assets.Model.Asset", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AssetId");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -58,8 +57,8 @@ namespace Asset.Data.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
-                    b.Property<long>("LaboratoryId")
-                        .HasColumnType("bigint");
+                    b.Property<Guid>("LaboratoryId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -76,22 +75,18 @@ namespace Asset.Data.Migrations
 
                     b.HasIndex("LaboratoryId");
 
-                    b.HasIndex("LaboratoryId", "Name")
-                        .IsUnique();
-
-                    b.ToTable("AssetModels", "asset");
+                    b.ToTable("Assets", "asset");
                 });
 
             modelBuilder.Entity("Asset.Assets.Model.AssetUnit", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AssetUnitId");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("AssetModelId")
-                        .HasColumnType("bigint");
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AssetTag")
                         .IsRequired()
@@ -103,6 +98,10 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreateBy")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -113,6 +112,10 @@ namespace Asset.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OperationalStatus")
                         .IsRequired()
@@ -140,7 +143,7 @@ namespace Asset.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssetModelId");
+                    b.HasIndex("AssetId");
 
                     b.HasIndex("AssetTag")
                         .IsUnique();
@@ -151,13 +154,64 @@ namespace Asset.Data.Migrations
                     b.ToTable("AssetUnits", "asset");
                 });
 
+            modelBuilder.Entity("Asset.Assets.Model.AssetUnitCondition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AssetUnitConditionId");
+
+                    b.Property<Guid>("AssetUnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreateBy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("SYSTEM");
+
+                    b.Property<DateTime?>("CreateOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsEffectiveFromUnknown")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEffectiveToUnknown")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UpdateBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdateOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetUnitId")
+                        .IsUnique();
+
+                    b.ToTable("AssetUnitConditions", "asset");
+                });
+
             modelBuilder.Entity("Asset.Assets.Model.Laboratory", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LaboratoriesId");
 
                     b.Property<string>("CreateBy")
                         .IsRequired()
@@ -256,34 +310,35 @@ namespace Asset.Data.Migrations
                     b.ToTable("OutboxMessages", "asset");
                 });
 
-            modelBuilder.Entity("Asset.Assets.Model.AssetModel", b =>
+            modelBuilder.Entity("Asset.Assets.Model.Asset", b =>
                 {
                     b.HasOne("Asset.Assets.Model.Laboratory", "Laboratory")
                         .WithMany()
                         .HasForeignKey("LaboratoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_AssetModels_Laboratories_LaboratoryId");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Laboratory");
                 });
 
             modelBuilder.Entity("Asset.Assets.Model.AssetUnit", b =>
                 {
-                    b.HasOne("Asset.Assets.Model.AssetModel", "AssetModel")
+                    b.HasOne("Asset.Assets.Model.Asset", "Asset")
                         .WithMany()
-                        .HasForeignKey("AssetModelId")
+                        .HasForeignKey("AssetId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_AssetUnits_AssetModels_AssetModelId");
+                        .IsRequired();
 
                     b.OwnsMany("Asset.Assets.ValueObject.AssetHistory", "Histories", b1 =>
                         {
-                            b1.Property<long>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("bigint");
+                            b1.Property<Guid>("AssetUnitId")
+                                .HasColumnType("uniqueidentifier");
 
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<long>("Id"));
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
                             b1.Property<DateTime>("ApproveAt")
                                 .HasColumnType("datetime2");
@@ -291,32 +346,41 @@ namespace Asset.Data.Migrations
                             b1.Property<Guid>("ApproveBy")
                                 .HasColumnType("uniqueidentifier");
 
-                            b1.Property<long>("AssetUnitId")
-                                .HasColumnType("bigint");
-
                             b1.Property<string>("Purpose")
                                 .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)");
+                                .HasColumnType("nvarchar(max)");
 
                             b1.Property<string>("Remark")
                                 .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("nvarchar(500)");
+                                .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("Id");
+                            b1.HasKey("AssetUnitId", "Id");
 
-                            b1.HasIndex("AssetUnitId");
-
-                            b1.ToTable("AssetHistories", "asset");
+                            b1.ToTable("AssetUnitHistories", "asset");
 
                             b1.WithOwner()
                                 .HasForeignKey("AssetUnitId");
                         });
 
-                    b.Navigation("AssetModel");
+                    b.Navigation("Asset");
 
                     b.Navigation("Histories");
+                });
+
+            modelBuilder.Entity("Asset.Assets.Model.AssetUnitCondition", b =>
+                {
+                    b.HasOne("Asset.Assets.Model.AssetUnit", "AssetUnit")
+                        .WithOne("Condition")
+                        .HasForeignKey("Asset.Assets.Model.AssetUnitCondition", "AssetUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssetUnit");
+                });
+
+            modelBuilder.Entity("Asset.Assets.Model.AssetUnit", b =>
+                {
+                    b.Navigation("Condition");
                 });
 #pragma warning restore 612, 618
         }

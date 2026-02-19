@@ -12,8 +12,8 @@ using Parameter.Data;
 namespace Parameter.Data.Migrations
 {
     [DbContext(typeof(ParameterDbContext))]
-    [Migration("20260217041559_AllowNullUpdateAuditFields")]
-    partial class AllowNullUpdateAuditFields
+    [Migration("20260219094256_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

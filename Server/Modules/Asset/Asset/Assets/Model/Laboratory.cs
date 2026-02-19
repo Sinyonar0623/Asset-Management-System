@@ -2,7 +2,7 @@ using Shared.DDD;
 
 namespace Asset.Assets.Model;
 
-public class Laboratory : Aggregate<long>
+public class Laboratory : Aggregate<Guid>
 {
     public string LaboratoryName { get; private set; } = null!;
     public string RoomNo { get; private set; } = null!;
