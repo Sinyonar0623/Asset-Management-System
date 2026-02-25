@@ -42,7 +42,7 @@ export default function AssetsPage() {
 
   return (
     <MainLayout>
-      <Header title="Asset Management" subtitle={}
+      <Header title="Asset Management" subtitle="รายการทรัพย์สินทั้งหมด"
         actions={canAdd ? (
           <Link href="/assets/new" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
             <span>+</span> Add New Asset
@@ -99,15 +99,15 @@ export default function AssetsPage() {
                       <td className="px-4 py-3 text-slate-600">{asset.type}</td>
                       <td className="px-4 py-3 text-slate-600 text-xs">{asset.laboratoryName ?? "-"}</td>
                       <td className="px-4 py-3">
-                        <span className={}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[asset.status] ?? "bg-slate-100 text-slate-600"}`}>
                           {STATUS_LABELS[asset.status] ?? asset.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600">{asset.amount}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link href={} className="text-xs text-blue-600 hover:underline">View</Link>
-                          {canAdd && <Link href={} className="text-xs text-slate-500 hover:underline">Edit</Link>}
+                          <Link href={`/assets/${asset.id}`} className="text-xs text-blue-600 hover:underline">View</Link>
+                          {canAdd && <Link href={`/assets/${asset.id}/edit`} className="text-xs text-slate-500 hover:underline">Edit</Link>}
                         </div>
                       </td>
                     </tr>

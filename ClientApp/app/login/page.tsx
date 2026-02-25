@@ -55,7 +55,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 shadow-lg">AM</div>
           <h1 className="text-2xl font-bold text-slate-800">Asset Management</h1>
-          <p className="text-slate-500 text-sm mt-1">ภาควิชาวิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเกษตรศาสตร์</p>
+          <p className="text-slate-500 text-sm mt-1">ภาควิชาวิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยศรีนครินทรวิโรฒ</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
