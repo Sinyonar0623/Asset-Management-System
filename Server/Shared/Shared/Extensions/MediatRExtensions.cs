@@ -8,7 +8,10 @@ public static class MediatRExtensions
 {
     public static IServiceCollection AddMediatRWithAssemblies(this IServiceCollection services, params Assembly[] assemblies)
     {
-        services.AddMediatR(assemblies);
+        
+        services.AddMediatR(cfg => {
+            cfg.RegisterServicesFromAssemblies(assemblies);
+        });
 
         return services;
     }

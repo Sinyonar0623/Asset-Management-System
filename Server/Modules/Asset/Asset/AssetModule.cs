@@ -1,4 +1,5 @@
 ﻿using Asset.Data;
+using Asset.Data.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -12,6 +13,8 @@ public static class AssetModule
 {
     public static IServiceCollection AddAssetModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<IAssetRepository, AssetRepository>();
+
         services.AddDbContext<AssetDbContext>((sp, options) =>
         {
             var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();

@@ -6,6 +6,7 @@ using Carter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Parameter;
+using Reauest;
 using Shared.Data;
 using Shared.Extensions;
 
@@ -14,9 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 var assetAssembly = typeof(AssetModule).Assembly;
 var authAssembly = typeof(AuthModule).Assembly;
 var parameterAssembly = typeof(ParameterModule).Assembly;
+var requestAssembly = typeof(RequestModule).Assembly;
 
-builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
-builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
+builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly, requestAssembly);
+builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly, requestAssembly);
 
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 var jwtIssuer = jwtSection["Issuer"] ?? string.Empty;
@@ -41,6 +43,17 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
     new SqlConnectionFactory(builder.Configuration.GetConnectionString("Database")!)
 );
@@ -48,9 +61,12 @@ builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
 builder.Services.AddAssetModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddParameterModule(builder.Configuration);
+builder.Services.AddRequestModule(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseAuthModule();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

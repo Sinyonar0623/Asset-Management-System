@@ -2,6 +2,7 @@ using Auth.Authentication.Jwt;
 using Auth.Authentication.Model;
 using Auth.Data;
 using Auth.Data.Repository;
+using Auth.Data.Seeder;
 using Auth.Data.UnitOfWork;
 using Auth.Service;
 using Microsoft.AspNetCore.Builder;
@@ -43,6 +44,7 @@ public static class AuthModule
     public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app)
     {
         app.UseMigration<AuthDbContext>();
+        AuthDataSeeder.SeedAsync(app.ApplicationServices).GetAwaiter().GetResult();
 
         return app;
     }

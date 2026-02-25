@@ -2,149 +2,151 @@
 import { useState } from "react";
 import MainLayout from "../components/MainLayout";
 import Header from "../components/Header";
+import { authApi } from "../lib/api";
 
-const users = [
-  { id: "USR-001", name: "นายสมชาย ใจดี", email: "somchai@student.ku.ac.th", role: "Student", studentId: "6410400001", status: "Active", joinDate: "2021-06-01" },
-  { id: "USR-002", name: "นางสาวสุดา มีทอง", email: "suda@student.ku.ac.th", role: "Student", studentId: "6410400025", status: "Active", joinDate: "2021-06-01" },
-  { id: "USR-003", name: "ผศ.ดร.วิชัย สุขใจ", email: "wichai@ku.ac.th", role: "Lecturer", studentId: "—", status: "Active", joinDate: "2015-06-01" },
-  { id: "USR-004", name: "รศ.ดร.สมศักดิ์ ดีงาม", email: "somsak@ku.ac.th", role: "Department Head", studentId: "—", status: "Active", joinDate: "2010-01-01" },
-  { id: "USR-005", name: "นางรัตนา ช่วยดี", email: "rattana@ku.ac.th", role: "Admin", studentId: "—", status: "Active", joinDate: "2018-03-01" },
-  { id: "USR-006", name: "นายประสิทธิ์ เก่งมาก", email: "prasit@student.ku.ac.th", role: "Student", studentId: "6410400088", status: "Inactive", joinDate: "2021-06-01" },
+const ROLE_OPTIONS = [
+  { code: "03", label: "นิสิต (Student)" },
+  { code: "02", label: "อาจารย์ (Lecturer)" },
+  { code: "01", label: "หัวหน้าภาควิชา (Dept Head)" },
+  { code: "00", label: "ผู้ดูแลระบบ (Admin)" },
 ];
 
-const roleColors: Record<string, string> = {
-  Student: "bg-blue-100 text-blue-700",
-  Lecturer: "bg-purple-100 text-purple-700",
-  Admin: "bg-orange-100 text-orange-700",
-  "Department Head": "bg-red-100 text-red-700",
-  Staff: "bg-teal-100 text-teal-700",
-};
-
 export default function UsersPage() {
-  const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState("All");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ username: "", email: "", password: "", roleCode: "03" });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const filtered = users.filter((u) => {
-    const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-    const matchRole = filterRole === "All" || u.role === filterRole;
-    return matchSearch && matchRole;
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFormError("");
+    try {
+      await authApi.signUp(form.username, form.email, form.password, form.roleCode);
+      setSuccessMsg(`เพิ่มผู้ใช้ ${form.username} สำเร็จแล้ว`);
+      setShowForm(false);
+      setForm({ username: "", email: "", password: "", roleCode: "03" });
+    } catch (err) {
+      setFormError((err as Error).message || "เกิดข้อผิดพลาด");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <MainLayout>
       <Header
         title="User Management"
-        subtitle={`${users.length} users in the system`}
+        subtitle="จัดการบัญชีผู้ใช้งานในระบบ"
         actions={
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+          <button
+            onClick={() => { setShowForm(!showForm); setFormError(""); setSuccessMsg(""); }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
             <span>+</span> Add User
           </button>
         }
       />
 
-      <div className="flex-1 p-6 space-y-4">
-        {/* Role Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Students", count: users.filter(u => u.role === "Student").length, color: "blue" },
-            { label: "Lecturers", count: users.filter(u => u.role === "Lecturer").length, color: "purple" },
-            { label: "Admins", count: users.filter(u => u.role === "Admin").length, color: "orange" },
-            { label: "Dept. Heads", count: users.filter(u => u.role === "Department Head").length, color: "red" },
-          ].map((s) => (
-            <div key={s.label} className="bg-white rounded-lg border border-slate-200 p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-slate-800">{s.count}</div>
-              <div className="text-sm text-slate-500">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-          <div className="flex flex-wrap gap-3">
-            <div className="flex-1 min-w-48">
-              <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="All">All Roles</option>
-              <option>Student</option>
-              <option>Lecturer</option>
-              <option>Admin</option>
-              <option>Department Head</option>
-              <option>Staff</option>
-            </select>
+      <div className="flex-1 p-6 space-y-6">
+        {successMsg && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+            <span className="text-green-500">✅</span>
+            <span className="font-medium text-green-800 text-sm">{successMsg}</span>
+            <button onClick={() => setSuccessMsg("")} className="ml-auto text-green-400">✕</button>
           </div>
-        </div>
+        )}
 
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-left">
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Student ID</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Join Date</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-sm font-semibold text-slate-600">
-                          {user.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-800">{user.name}</div>
-                          <div className="text-xs text-slate-400">{user.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 text-xs">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${roleColors[user.role] || "bg-slate-100 text-slate-600"}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 font-mono text-xs">{user.studentId}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${user.status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{user.joinDate}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button className="text-xs text-blue-600 hover:underline">Edit</button>
-                        <button className="text-xs text-slate-400 hover:underline">
-                          {user.status === "Active" ? "Deactivate" : "Activate"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {showForm && (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="font-semibold text-slate-800">Add New User</h2>
+              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {formError && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  ⚠️ {formError}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Username <span className="text-red-500">*</span>
+                  </label>
+                  <input type="text" name="username" value={form.username} onChange={handleChange} required
+                    placeholder="e.g. john.doe"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input type="email" name="email" value={form.email} onChange={handleChange} required
+                    placeholder="e.g. john@ku.ac.th"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input type="password" name="password" value={form.password} onChange={handleChange} required
+                    placeholder="Min 8 characters"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select name="roleCode" value={form.roleCode} onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    {ROLE_OPTIONS.map((r) => (
+                      <option key={r.code} value={r.code}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowForm(false)}
+                  className="px-5 py-2 border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting}
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
+                  {submitting ? "กำลังเพิ่ม..." : "Add User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-800">Role Overview</h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: "Students", code: "03", color: "bg-blue-50 border-blue-200 text-blue-700" },
+                { label: "Lecturers", code: "02", color: "bg-purple-50 border-purple-200 text-purple-700" },
+                { label: "Dept Heads", code: "01", color: "bg-red-50 border-red-200 text-red-700" },
+                { label: "Admins", code: "00", color: "bg-orange-50 border-orange-200 text-orange-700" },
+              ].map((r) => (
+                <div key={r.code} className={`rounded-lg border p-4 text-center ${r.color}`}>
+                  <div className="text-sm font-semibold">{r.label}</div>
+                  <div className="text-xs mt-0.5 opacity-70">Code: {r.code}</div>
+                </div>
+              ))}
+            </div>
+            <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-1">
+              <p className="font-medium text-slate-700">หมายเหตุ</p>
+              <p>ใช้ปุ่ม <strong>Add User</strong> เพื่อสร้างบัญชีผู้ใช้ใหม่ผ่าน API</p>
+              <p>การแสดงรายชื่อผู้ใช้ทั้งหมดต้องเพิ่ม endpoint <code>GET /auth/users</code> ในฝั่ง backend</p>
+            </div>
           </div>
         </div>
       </div>

@@ -94,4 +94,28 @@ public class Asset : Aggregate<long>
             _component.Add(component);
         }
     }
+
+    public void Update(
+        string brand,
+        string name,
+        string description,
+        string type,
+        string status,
+        long amount,
+        string remark)
+    {
+        Brand = brand;
+        Name = name;
+        Description = description;
+        Type = type;
+        Status = status;
+        Amount = amount;
+        Remark = remark;
+    }
+
+    public void UpdateStatus(string status)
+    {
+        Status = status;
+    }
 }
+

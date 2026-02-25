@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\assetmanage\\\\Asset-Management-System\\\\Server\\\\Modules\\\\Auth\\\\Auth\" -Recurse -Name)",
+      "Bash(Sort-Object)",
+      "Bash(dotnet build:*)",
+      "Bash(/c/Users/User/AppData/Local/Programs/Python/Python313/python -c \"\nimport sys\nprint\\(''python ok'', sys.version\\)\nwith open\\(''D:/project/assetmanage/Asset-Management-System/writer.js'', ''w'', encoding=''utf-8''\\) as f:\n    f.write\\(''const fs = require\\(\"\"fs\"\"\\); console.log\\(\"\"writer ok\"\"\\);\\\\n''\\)\nprint\\(''file written''\\)\n\")",
+      "Bash(node:*)",
+      "Bash(cmd /c \"node -e \"\"const fs=require\\(''fs''\\);fs.writeFileSync\\(''D:/project/assetmanage/Asset-Management-System/test3.js'',''ok'',''utf8''\\);console.log\\(''ok''\\);\"\"\")",
+      "Bash(dotnet --version:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet tool install:*)",
+      "Bash(dotnet ef database update:*)",
+      "Bash(powershell -Command \"Get-Service -Name ''MSSQLSERVER'',''MSSQL*'' -ErrorAction SilentlyContinue | Select-Object Name,Status,DisplayName\")",
+      "Bash(sc query:*)",
+      "Bash(ls:*)",
+      "Bash(docker info:*)",
+      "Bash(cmd.exe /c \"docker ps 2>&1\")",
+      "Bash(echo:*)",
+      "Bash(cmd.exe /c \"docker ps && echo DOCKER_OK\")",
+      "Bash(cmd.exe /c \"where docker 2>&1 & docker --version 2>&1 & docker ps 2>&1\")",
+      "Bash(cmd.exe /c \"docker --version\")",
+      "Bash(cmd.exe /c \"cd /d D:\\\\project\\\\assetmanage\\\\Asset-Management-System && docker compose up -d sqlserver 2>&1\")",
+      "Bash(cmd.exe /c \"docker ps --format \"\"{{.Names}}\\\\t{{.Status}}\"\" 2>&1\")",
+      "Bash(cmd.exe /c \"sqllocaldb info 2>&1 & sqllocaldb versions 2>&1\")",
+      "Bash(cmd.exe /c \"sc query MSSQLSERVER 2>&1\")",
+      "Bash(cmd.exe /c \"sc query MSSQL$SQLEXPRESS 2>&1\")",
+      "Bash(cmd.exe /c \"sc query type= all | findstr /i sql 2>&1\")",
+      "Bash(powershell.exe -NoProfile -NonInteractive -Command \"Get-Service | Where-Object {$_DisplayName -match ''SQL''} | Format-Table Name,Status,DisplayName -AutoSize | Out-String\")",
+      "Bash(powershell.exe -NoProfile -NonInteractive -Command \":*)",
+      "Bash(powershell.exe -NoProfile -NonInteractive -Command \"Get-Service *sql* | Select-Object Name,Status | ConvertTo-Csv -NoTypeInformation\")",
+      "Bash(powershell.exe -NoProfile -NonInteractive -Command \"Get-Service *sql* | Export-Csv -Path ''C:\\\\Temp\\\\sqlservices.csv'' -NoTypeInformation -Force; Get-Content ''C:\\\\Temp\\\\sqlservices.csv''\")",
+      "Bash(# Check if LocalDB is available ls \"\"/mnt/c/Program Files/Microsoft SQL Server/150/Tools/Binn/sqllocaldb.exe\"\" && echo \"\"LocalDB_150_found\"\" || echo \"\"no_150\"\" ls \"\"/mnt/c/Program Files/Microsoft SQL Server/160/Tools/Binn/sqllocaldb.exe\"\" && echo \"\"LocalDB_160_found\"\" || echo \"\"no_160\"\" # Check for SQL Server installation dirs ls \"\"/mnt/c/Program Files/Microsoft SQL Server/\"\")",
+      "Bash(powershell -Command \"Get-Process -Name dotnet -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host ''All dotnet processes stopped''\")",
+      "Bash(powershell -Command \"Stop-Process -Id 16824 -Force -ErrorAction SilentlyContinue; Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq '''' } | Stop-Process -Force -ErrorAction SilentlyContinue; Write-Host ''Done''\")",
+      "Bash(powershell -Command \"Stop-Process -Id 16824 -Force -ErrorAction SilentlyContinue; Stop-Process -Id 2042 -Force -ErrorAction SilentlyContinue; Write-Host ''Killed specific PIDs''\")",
+      "Bash(powershell -Command \"netstat -ano | findstr '':3000 ''\")",
+      "Bash(powershell -Command \"netstat -ano | findstr '':5000 ''\")",
+      "Bash(powershell -Command \"Stop-Process -Id 20352 -Force -ErrorAction SilentlyContinue; Write-Host ''Killed PID 20352''\")"
+    ]
+  }
+}

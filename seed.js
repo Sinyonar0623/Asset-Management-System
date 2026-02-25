@@ -1,0 +1,1 @@
+const fs = require("fs"); const BT = String.fromCharCode(96); console.log("seed loaded, BT="+BT);
