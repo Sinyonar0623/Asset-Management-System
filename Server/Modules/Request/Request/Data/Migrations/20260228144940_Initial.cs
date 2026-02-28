@@ -1,0 +1,237 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Request.Data.Migrations
+{
+    /// <inheritdoc />
+    public partial class Initial : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.EnsureSchema(
+                name: "request");
+
+            migrationBuilder.CreateTable(
+                name: "OutboxMessages",
+                schema: "request",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Type = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(1)", nullable: false),
+                    OccurredOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
+                    ProcessedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RetryCount = table.Column<int>(type: "int", nullable: false),
+                    Error = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OutboxMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Requests",
+                schema: "request",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
+                    RequestNo = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    RequestType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    RequesterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    CurrentStepNo = table.Column<int>(type: "int", nullable: true),
+                    NextApproverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    SubmittedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FinalizedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Requests", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RequestDetails",
+                schema: "request",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Purpose = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    BorrowFrom = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    BorrowTo = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IssueDescription = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    RetireReason = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    ExtraNote = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RequestDetails", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RequestDetail_RequestId",
+                        column: x => x.RequestId,
+                        principalSchema: "request",
+                        principalTable: "Requests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RequestItems",
+                schema: "request",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AssetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    QuantityRequested = table.Column<int>(type: "int", nullable: false),
+                    QuantityApproved = table.Column<int>(type: "int", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RequestItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RequestItems_Requests_RequestId",
+                        column: x => x.RequestId,
+                        principalSchema: "request",
+                        principalTable: "Requests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RequestTrackings",
+                schema: "request",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StepNo = table.Column<int>(type: "int", nullable: false),
+                    RequiredRoleCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    AssignedApproverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ActionByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ActionOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Comment = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    IsCurrent = table.Column<bool>(type: "bit", nullable: false),
+                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RequestTrackings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RequestTrackings_Requests_RequestId",
+                        column: x => x.RequestId,
+                        principalSchema: "request",
+                        principalTable: "Requests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestDetails_RequestId",
+                schema: "request",
+                table: "RequestDetails",
+                column: "RequestId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestItems_AssetId",
+                schema: "request",
+                table: "RequestItems",
+                column: "AssetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestItems_RequestId_AssetId",
+                schema: "request",
+                table: "RequestItems",
+                columns: new[] { "RequestId", "AssetId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Requests_RequesterId",
+                schema: "request",
+                table: "Requests",
+                column: "RequesterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Requests_RequestNo",
+                schema: "request",
+                table: "Requests",
+                column: "RequestNo",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Requests_Status_NextApproverId",
+                schema: "request",
+                table: "Requests",
+                columns: new[] { "Status", "NextApproverId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestTrackings_AssignedApproverId_Status",
+                schema: "request",
+                table: "RequestTrackings",
+                columns: new[] { "AssignedApproverId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestTrackings_RequestId",
+                schema: "request",
+                table: "RequestTrackings",
+                column: "RequestId",
+                unique: true,
+                filter: "[IsCurrent] = 1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RequestTrackings_RequestId_StepNo",
+                schema: "request",
+                table: "RequestTrackings",
+                columns: new[] { "RequestId", "StepNo" },
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "OutboxMessages",
+                schema: "request");
+
+            migrationBuilder.DropTable(
+                name: "RequestDetails",
+                schema: "request");
+
+            migrationBuilder.DropTable(
+                name: "RequestItems",
+                schema: "request");
+
+            migrationBuilder.DropTable(
+                name: "RequestTrackings",
+                schema: "request");
+
+            migrationBuilder.DropTable(
+                name: "Requests",
+                schema: "request");
+        }
+    }
+}

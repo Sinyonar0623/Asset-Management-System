@@ -6,6 +6,7 @@ using Carter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Parameter;
+using Request;
 using Shared.Data;
 using Shared.Extensions;
 
@@ -14,9 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 var assetAssembly = typeof(AssetModule).Assembly;
 var authAssembly = typeof(AuthModule).Assembly;
 var parameterAssembly = typeof(ParameterModule).Assembly;
+var RequestAssembly = typeof(RequestModule).Assembly;
 
-builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
-builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly);
+builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
+builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
 
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 var jwtIssuer = jwtSection["Issuer"] ?? string.Empty;
@@ -48,6 +50,7 @@ builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
 builder.Services.AddAssetModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddParameterModule(builder.Configuration);
+builder.Services.AddRequestModule(builder.Configuration);
 
 var app = builder.Build();
 

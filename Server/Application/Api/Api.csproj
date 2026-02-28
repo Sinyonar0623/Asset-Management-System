@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\Modules\Parameter\Parameter\Parameter.csproj" />
     <ProjectReference Include="..\..\Shared\Shared\Shared.csproj" />
     <ProjectReference Include="..\..\Modules\Auth\Auth\Auth.csproj" />
+    <ProjectReference Include="..\..\Modules\Request\Request\Request.csproj" />
   </ItemGroup>
   
   <ItemGroup>
