@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parameter", "Server\Modules
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Request", "Request", "{0D834F3A-B3BC-772F-88BC-BBB4999B45FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reauest", "Server\Modules\Request\Reauest\Reauest.csproj", "{0E2C1B35-48AD-4520-96CD-8F3A7B20568A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Request", "Server\Modules\Request\Request\Request.csproj", "{0E2C1B35-48AD-4520-96CD-8F3A7B20568A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Auth", "Auth", "{82CA938C-5658-CEA3-5F48-634FCE7E43F3}"
 EndProject

@@ -5,7 +5,7 @@ param(
 
     [string]$MigrationName,
 
-    [ValidateSet("all", "auth", "asset", "parameter")]
+    [ValidateSet("all", "auth", "asset", "parameter", "request")]
     [string]$Context = "all",
 
     [string]$StartupProject = "Server/Application/Api/Api.csproj",
@@ -52,6 +52,11 @@ function Get-SelectedContexts {
             Key       = "parameter"
             Project   = "Server/Modules/Parameter/Parameter/Parameter.csproj"
             DbContext = "Parameter.Data.ParameterDbContext"
+        },
+        [PSCustomObject]@{
+            Key       = "request"
+            Project   = "Server/Modules/Request/Request/Request.csproj"
+            DbContext = "Request.Data.RequestDbContext"
         }
     )
 
@@ -150,12 +155,13 @@ function Start-InteractiveMenu {
     $actionIndex = Read-MenuChoice -Title "Select action" -Options $actionLabels -Default 1
     $script:Action = $actionValues[$actionIndex]
 
-    $contextValues = @("all", "auth", "asset", "parameter")
+    $contextValues = @("all", "auth", "asset", "parameter", "request")
     $contextLabels = @(
         "all contexts",
         "auth",
         "asset",
-        "parameter"
+        "parameter",
+        "request"
     )
 
     $contextIndex = Read-MenuChoice -Title "Select context" -Options $contextLabels -Default 1
