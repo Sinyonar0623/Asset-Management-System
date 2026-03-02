@@ -15,6 +15,13 @@
 - Follow existing folder/module conventions.
 - Add/modify tests only if asked.
 
+## Request Workflow Rules
+- Every request must end with final decision by Head of Department (HOD).
+- Student flow: Student -> Lab Teacher (assign asset unit/approved quantity) -> HOD (final approve/reject).
+- If HOD rejects, request returns to Lab Teacher to either close as rejected or adjust and resubmit.
+- Prefer implementing this as a Request aggregate state machine + tracking transitions.
+- Do not introduce Saga for approval routing unless cross-module async compensation is required.
+
 ## Output Rules
 - Provide file-by-file changes and explain what was changed.
 - Do not change dependencies unless necessary.

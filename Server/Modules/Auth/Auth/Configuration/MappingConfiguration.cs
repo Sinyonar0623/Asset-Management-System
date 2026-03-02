@@ -21,7 +21,8 @@ public static class MappingConfiguration
             .ConstructUsing(src => new UsernameDto(
                 src.Username,
                 src.Email,
-                src.Password
+                src.Password,
+                src.RoleCode
             ));
     }
 }
