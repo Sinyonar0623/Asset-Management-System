@@ -1,10 +1,10 @@
 "use client";
 
-import MainLayout from "../components/MainLayout";
-import Header from "../components/Header";
+import MainLayout from "../src/components/MainLayout";
+import Header from "../src/components/Header";
 import Link from "next/link";
-import { useAuth } from "../contexts/AuthContext";
-import { PERMISSIONS } from "../lib/auth";
+import { useAuth } from "../src/context/AuthContext";
+import { PERMISSIONS } from "../src/lib/auth";
 
 const stats = [
   { label: "Total Assets", value: "248", change: "+12 this month", color: "blue", icon: "📦" },

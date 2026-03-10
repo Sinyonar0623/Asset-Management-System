@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { PERMISSIONS } from "../lib/auth";
 
 type PermissionKey = keyof Omit<typeof PERMISSIONS, "canApproveForAsset">;

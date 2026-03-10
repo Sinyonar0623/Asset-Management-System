@@ -73,7 +73,10 @@ public class AuthService(
         var user = await _repository.GetByEmailAsync(email.Trim(), cancellationToken);
         if (user is null || string.IsNullOrWhiteSpace(user.PasswordHash) || user.Role is null)
         {
-            return new LoginAttemptDto(false, null, "Invalid email or password.", false, false);
+            user = await _repository.GetByUserNameAsync(email.Trim(), cancellationToken);
+            
+            if (user is null || string.IsNullOrWhiteSpace(user.PasswordHash) || user.Role is null)
+                return new LoginAttemptDto(false, null, "Invalid email or password.", false, false);
         }
 
         var verified = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);

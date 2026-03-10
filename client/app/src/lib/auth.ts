@@ -22,6 +22,9 @@ export interface AuthSession {
   role: Role;
   department: string;
   ownedAssetIds: string[];
+  accessToken?: string;
+  tokenType?: string;
+  expiresAt?: number;
 }
 
 // ─── Permission functions ────────────────────────────────────────────────────
