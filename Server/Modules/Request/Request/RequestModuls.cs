@@ -10,10 +10,10 @@ public static class RequestModule
         {
            var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();
            options.AddInterceptors(saveChangesInterceptors);
-           options.UseSqlServer(configuration.GetConnectionString("Database"), SqlOptions =>
+           options.UseNpgsql(configuration.GetConnectionString("Database"), npgsqlOptions =>
            {
-              SqlOptions.MigrationsAssembly(typeof(RequestDbContext).Assembly.GetName().Name);
-              SqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "request");
+              npgsqlOptions.MigrationsAssembly(typeof(RequestDbContext).Assembly.GetName().Name);
+              npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "request");
            });
         });
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -20,18 +21,18 @@ namespace Request.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Type = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
-                    Payload = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(1)", nullable: false),
-                    OccurredOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
-                    ProcessedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RetryCount = table.Column<int>(type: "int", nullable: false),
-                    Error = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
-                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
-                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Type = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
+                    Payload = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<char>(type: "character(1)", nullable: false),
+                    OccurredOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ProcessedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    RetryCount = table.Column<int>(type: "integer", nullable: false),
+                    Error = table.Column<string>(type: "text", nullable: true),
+                    CreateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    CreateBy = table.Column<string>(type: "text", nullable: false, defaultValue: "SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdateBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -43,21 +44,21 @@ namespace Request.Data.Migrations
                 schema: "request",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
-                    RequestNo = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    RequestType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    RequesterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Reason = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    CurrentStepNo = table.Column<int>(type: "int", nullable: true),
-                    NextApproverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    SubmittedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FinalizedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
-                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
-                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestNo = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    RequestType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    RequesterId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Reason = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                    CurrentStepNo = table.Column<int>(type: "integer", nullable: true),
+                    NextApproverId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SubmittedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FinalizedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
+                    CreateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    CreateBy = table.Column<string>(type: "text", nullable: false, defaultValue: "SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdateBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -70,18 +71,18 @@ namespace Request.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Purpose = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    BorrowFrom = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    BorrowTo = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IssueDescription = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    RetireReason = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    ExtraNote = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreateOn = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
-                    CreateBy = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: " SYSTEM"),
-                    UpdateOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdateBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Purpose = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    BorrowFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    BorrowTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IssueDescription = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    RetireReason = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    ExtraNote = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    RequestId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    CreateBy = table.Column<string>(type: "text", nullable: false, defaultValue: "SYSTEM"),
+                    UpdateOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdateBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -101,12 +102,12 @@ namespace Request.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AssetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    QuantityRequested = table.Column<int>(type: "int", nullable: false),
-                    QuantityApproved = table.Column<int>(type: "int", nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    AssetId = table.Column<Guid>(type: "uuid", nullable: false),
+                    QuantityRequested = table.Column<int>(type: "integer", nullable: false),
+                    QuantityApproved = table.Column<int>(type: "integer", nullable: true),
+                    Note = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    RequestId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -126,16 +127,16 @@ namespace Request.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StepNo = table.Column<int>(type: "int", nullable: false),
-                    RequiredRoleCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    AssignedApproverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    ActionByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ActionOn = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Comment = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    IsCurrent = table.Column<bool>(type: "bit", nullable: false),
-                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    StepNo = table.Column<int>(type: "integer", nullable: false),
+                    RequiredRoleCode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AssignedApproverId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ActionByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ActionOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Comment = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    IsCurrent = table.Column<bool>(type: "boolean", nullable: false),
+                    RequestId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -200,7 +201,7 @@ namespace Request.Data.Migrations
                 table: "RequestTrackings",
                 column: "RequestId",
                 unique: true,
-                filter: "[IsCurrent] = 1");
+                filter: "\"IsCurrent\" = TRUE");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RequestTrackings_RequestId_StepNo",

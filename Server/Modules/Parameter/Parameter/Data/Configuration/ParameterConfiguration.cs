@@ -11,7 +11,7 @@ public class ParameterConfiguration : IEntityTypeConfiguration<Parameter.Paramet
         builder.ToTable("Parameters");
 
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
         builder.Property(x => x.Group).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Value).HasMaxLength(500).IsRequired();

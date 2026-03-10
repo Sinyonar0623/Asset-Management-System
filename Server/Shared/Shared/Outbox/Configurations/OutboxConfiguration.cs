@@ -12,13 +12,13 @@ public sealed class OutboxConfiguration(bool excludeFromMigrations = false) : IE
         });
 
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
         builder.Property(x => x.Type).HasMaxLength(512).IsRequired();
         builder.Property(x => x.Payload).IsRequired();
 
         builder.Property(x => x.OccurredOn)
-            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAdd();
     }
 }

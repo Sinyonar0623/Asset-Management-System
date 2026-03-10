@@ -1,16 +1,16 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace Shared.Data;
 
 public class SqlConnectionFactory(string connectionString) : ISqlConnectionFactory, IDisposable
 {
     private readonly string _connectionString = connectionString;
-    private IDbConnection _connection;
+    private IDbConnection? _connection;
 
     public IDbConnection CreateNewConnection()
     {
-        var connection = new SqlConnection(_connectionString);
+        var connection = new NpgsqlConnection(_connectionString);
         connection.Open();
 
         return connection;
@@ -18,7 +18,7 @@ public class SqlConnectionFactory(string connectionString) : ISqlConnectionFacto
 
     public void Dispose()
     {
-        if(_connection != null || _connection.State == ConnectionState.Open)
+        if (_connection is not null && _connection.State == ConnectionState.Open)
         {
             _connection.Dispose();
         }
@@ -31,9 +31,9 @@ public class SqlConnectionFactory(string connectionString) : ISqlConnectionFacto
 
     public IDbConnection GetOpenConnection()
     {
-        if(_connection == null || _connection.State != ConnectionState.Open)
+        if (_connection == null || _connection.State != ConnectionState.Open)
         {
-            _connection = new SqlConnection(_connectionString);
+            _connection = new NpgsqlConnection(_connectionString);
             _connection.Open();
         }
         return _connection;

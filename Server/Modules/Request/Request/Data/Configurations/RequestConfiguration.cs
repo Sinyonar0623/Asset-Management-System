@@ -8,7 +8,6 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
-            .HasDefaultValueSql("NEWID()")
             .ValueGeneratedOnAdd();
 
         builder.Property(x => x.RequestNo).HasMaxLength(30).IsRequired();
@@ -22,7 +21,9 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
         builder.Property(x => x.FinalizedOn).IsRequired(false);
 
         builder.Property(x => x.RowVersion)
-            .IsRowVersion()
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
             .IsConcurrencyToken();
 
         builder.HasIndex(x => new { x.Status, x.NextApproverId });
@@ -39,7 +40,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
             item.ToTable("RequestItems");
             item.WithOwner().HasForeignKey("RequestId");
 
-            item.Property<long>("Id").UseIdentityColumn();
+            item.Property<long>("Id").ValueGeneratedOnAdd();
             item.HasKey("Id");
 
             item.Property(x => x.AssetId).IsRequired();
@@ -56,7 +57,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
             tracking.ToTable("RequestTrackings");
             tracking.WithOwner().HasForeignKey("RequestId");
 
-            tracking.Property<long>("Id").UseIdentityColumn();
+            tracking.Property<long>("Id").ValueGeneratedOnAdd();
             tracking.HasKey("Id");
 
             tracking.Property(x => x.StepNo).IsRequired();
@@ -67,7 +68,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
 
             tracking.HasIndex("RequestId", nameof(RequestTracking.StepNo)).IsUnique();
             tracking.HasIndex("RequestId")
-                .HasFilter("[IsCurrent] = 1")
+                .HasFilter("\"IsCurrent\" = TRUE")
                 .IsUnique();
             tracking.HasIndex(nameof(RequestTracking.AssignedApproverId), nameof(RequestTracking.Status));
         });

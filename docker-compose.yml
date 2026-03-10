@@ -1,15 +1,14 @@
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: "Developer"
-      MSSQL_SA_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "1433:1433"
+      - "5433:5432"
     volumes:
-      - mssql-data:/var/opt/mssql
-      - mssql-backups:/var/opt/mssql/backups
+      - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   rabbitmq:
@@ -25,6 +24,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  mssql-data:
-  mssql-backups:
+  postgres-data:
   rabbitmq-data:

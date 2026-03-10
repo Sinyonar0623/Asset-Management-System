@@ -23,10 +23,10 @@ public static class AssetModule
         {
             var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();
             options.AddInterceptors(saveChangesInterceptors);
-            options.UseSqlServer(configuration.GetConnectionString("Database"), sqlOptions =>
+            options.UseNpgsql(configuration.GetConnectionString("Database"), npgsqlOptions =>
             {
-                sqlOptions.MigrationsAssembly(typeof(AssetDbContext).Assembly.GetName().Name);
-                sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "asset");
+                npgsqlOptions.MigrationsAssembly(typeof(AssetDbContext).Assembly.GetName().Name);
+                npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "asset");
             });
         });
 

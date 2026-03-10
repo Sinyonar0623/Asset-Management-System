@@ -5,7 +5,7 @@ Web application for department asset management with role-based workflows.
 This repository contains:
 - Backend: .NET 10 modular monolith (`Server`)
 - Frontend: Next.js (`ClientApp`)
-- Local infrastructure: SQL Server + RabbitMQ (`docker-compose.yml`)
+- Local infrastructure: PostgreSQL + RabbitMQ (`docker-compose.yml`)
 
 ## 1) Project Goal
 
@@ -21,7 +21,7 @@ Implemented now:
 - Auth module with API endpoints: signup, login, logout
 - JWT token generation + JWT bearer authentication
 - Duplicate login guard (blocks active concurrent session inside token lifetime)
-- SQL Server integration with EF Core migrations for Auth/Asset/Parameter/Request contexts
+- PostgreSQL integration with EF Core migrations for Auth/Asset/Parameter/Request contexts
 
 Partially implemented:
 - Asset domain model + migrations
@@ -44,7 +44,7 @@ Important current frontend note:
 - .NET 10 (`net10.0`)
 - Carter (minimal API modules)
 - MediatR
-- EF Core + SQL Server
+- EF Core + PostgreSQL
 - MassTransit + RabbitMQ
 - Next.js 16 + React 19 + TypeScript
 - Docker Compose
@@ -57,7 +57,7 @@ Important current frontend note:
 flowchart LR
     U[Frontend Next.js] --> API[API Host<br/>Server/Application/Api]
     API --> MOD[Modules<br/>Auth Asset Parameter Request]
-    MOD --> DB[(SQL Server)]
+    MOD --> DB[(PostgreSQL)]
     MOD --> MQ[(RabbitMQ)]
     MOD --> SH[Shared Libraries<br/>CQRS DDD Extensions]
 ```
@@ -266,7 +266,7 @@ docker compose up -d
 ```
 
 Services:
-- SQL Server: `localhost:1433`
+- PostgreSQL: `localhost:5433`
 - RabbitMQ AMQP: `localhost:5672`
 - RabbitMQ UI: `http://localhost:15672`
 
