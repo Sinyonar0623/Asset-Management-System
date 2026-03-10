@@ -7,7 +7,7 @@ public class RequestDetailConfiguration : IEntityTypeConfiguration<RequestDetail
         builder.ToTable("RequestDetails");
 
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
         builder.Property<Guid>("RequestId").IsRequired(); // shadow FK
         builder.HasIndex("RequestId").IsUnique();

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.Identity.Client;
 
 namespace Shared.CQRS;
 

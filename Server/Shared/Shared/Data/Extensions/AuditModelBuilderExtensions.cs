@@ -21,7 +21,7 @@ public static class AuditModelBuilderExtensions
             var builder = modelBuilder.Entity(entityType.ClrType);
 
             builder.Property(nameof(IEntity.CreateOn))
-                .HasDefaultValueSql("SYSUTCDATETIME()")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .ValueGeneratedOnAdd();
 
             builder.Property(nameof(IEntity.CreateBy))

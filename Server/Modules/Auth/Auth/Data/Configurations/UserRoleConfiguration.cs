@@ -1,4 +1,5 @@
 using Auth.Authentication.Model;
+using Auth.Data.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,7 +13,8 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
-            .HasDefaultValueSql("NEWID()")
             .ValueGeneratedOnAdd();
+
+        builder.HasData(InitialData.UserRoles);
     }
 }

@@ -10,13 +10,13 @@ public class AuthRepository(AuthDbContext dbContext) : Repository<UserName, Guid
 
     public async Task<bool> ExistsByUsernameOrEmailAsync(string username, string email, CancellationToken cancellationToken = default)
     {
-        return await _context.Auth.AsNoTracking()
+        return await _context.UserName.AsNoTracking()
             .AnyAsync(x => x.Username == username || x.Email == email, cancellationToken);
     }
 
     public async Task<UserName?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await _context.Auth
+        return await _context.UserName
             .Include(x => x.Role)
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }

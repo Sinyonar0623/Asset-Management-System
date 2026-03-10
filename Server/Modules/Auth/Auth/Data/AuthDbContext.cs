@@ -7,7 +7,8 @@ namespace Auth.Data;
 
 public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(options)
 {
-    public DbSet<UserName> Auth => Set<UserName>();
+    public DbSet<UserName> UserName => Set<UserName>();
+    public DbSet<UserRole> UserRole => Set<UserRole>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

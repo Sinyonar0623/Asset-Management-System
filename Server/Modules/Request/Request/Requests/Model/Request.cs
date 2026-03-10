@@ -11,7 +11,7 @@ public class Request : Aggregate<Guid>
     public Guid? NextApproverId { get; private set; }
     public DateTime SubmittedOn { get; private set; }
     public DateTime? FinalizedOn { get; private set; }
-    public byte[] RowVersion { get; private set; } = null!;
+    public uint RowVersion { get; private set; }
 
     public RequestDetail? Detail { get; private set; }
 
