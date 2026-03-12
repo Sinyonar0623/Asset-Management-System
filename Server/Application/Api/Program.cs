@@ -73,6 +73,24 @@ builder.Services.AddRequestModule(builder.Configuration);
 
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (KeyNotFoundException)
+    {
+        if (context.Response.HasStarted)
+        {
+            throw;
+        }
+
+        context.Response.Clear();
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+    }
+});
+
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();

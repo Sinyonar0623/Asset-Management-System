@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Parameter.Data;
+using Parameter.Data.Repository;
 using Shared.Data.Extensions;
 
 namespace Parameter;
@@ -12,6 +13,10 @@ public static class ParameterModule
 {
     public static IServiceCollection AddParameterModule(this IServiceCollection service, IConfiguration configuration)
     {
+        service.AddScoped<IParameterService, ParameterService>();
+
+        service.AddScoped<IParameterRepository, ParameterRepository>();
+
         service.AddDbContext<ParameterDbContext>((sp, options) =>
         {
             var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();
