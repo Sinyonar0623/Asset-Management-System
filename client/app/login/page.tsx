@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
 
   // Redirect already-logged-in users away from /login
   useEffect(() => {

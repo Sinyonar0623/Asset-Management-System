@@ -1,7 +1,13 @@
 import axios, { AxiosHeaders } from "axios";
 import { LOCAL_STORAGE_KEY } from "./auth";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+
+if (!apiBaseUrl) {
+  throw new Error(
+    "Missing NEXT_PUBLIC_API_BASE_URL. Define it in client/.env.local (e.g. NEXT_PUBLIC_API_BASE_URL=http://localhost:5176)."
+  );
+}
 
 const api = axios.create({
   baseURL: apiBaseUrl,
