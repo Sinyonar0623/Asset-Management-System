@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
         setSession(newSession);
-        router.push("/dashboard");
+        router.push("/assetManagement/dashboard");
         return true;
       } catch {
         return false;

@@ -1,107 +1,218 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../src/context/AuthContext";
+import { Controller, useForm } from "react-hook-form";
+
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  LoginFormSchema,
+  type LoginFormValues,
+} from "@/schema/LoginForm";
+import { useAuth } from "../../context/AuthContext";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function LoginPage() {
   const { login, session, isLoading } = useAuth();
   const router = useRouter();
-  const [form, setForm] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState("");
 
-  // Redirect already-logged-in users away from /login
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(LoginFormSchema),
+    mode: "onBlur",
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
   useEffect(() => {
     if (!isLoading && session) {
-      router.replace("/dashboard");
+      router.replace("/assetManagement/dashboard");
     }
   }, [session, isLoading, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-    const ok = await login(form.username.trim(), form.password);
+  const onSubmit = async (values: LoginFormValues) => {
+    setAuthError("");
+
+    const ok = await login(values.username, values.password);
     if (!ok) {
-      setError("Invalid email or password. Please try again.");
-      setSubmitting(false);
+      setAuthError("Invalid username/email or password. Please try again.");
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
+        <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-sm">
-        {/* Branding */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 shadow-lg">
-            A
+    <main className="min-h-[100dvh] bg-background text-foreground">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-10">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl">
+              <Image
+                src="/AMS_logo.svg"
+                alt="AMS Logo"
+                width={36}
+                height={36}
+                className="rounded-lg object-cover"
+              />
+            </div>
+            <p className="font-en text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:text-sm">
+              Asset Management System
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Asset Management System</h1>
+          <ThemeToggle />
+        </header>
 
-        </div>
+        <section className="flex flex-1 items-center justify-center py-6 sm:py-10 xl:py-12">
+          <div className="grid w-full max-w-6xl overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:min-h-[620px] lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.25fr_1fr] shadow-2xl">
+            <aside className="relative hidden overflow-hidden bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-12">
+              <div className="space-y-8">
+                <p className="font-en text-sm font-medium uppercase tracking-[0.18em] text-white/80">
+                  Asset Management
+                </p>
+                <h1 className="font-en mt-3 text-3xl font-semibold leading-tight xl:text-4xl">
+                  Welcome back
+                </h1>
+                <p className="font-en mt-4 text-sm text-white/85 xl:max-w-md xl:text-base">
+                  Sign in to manage assets, requests, and approvals in one place.
+                </p>
+                <div className="bg-white p-3 rounded-xl shadow-2xl">
+                  <Image
+                    src="/en_com.png"
+                    alt="CPE_logo"
+                    width="400"
+                    height="107"
+                  />
+                  
+                </div>
+                
+              </div>
+              <p className="font-en text-xs text-white/75">
+                Srinakharinwirot University Computer Engineering Department Asset Platform
+              </p>
+            </aside>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-          <h2 className="text-lg font-semibold text-slate-800 mb-6">Login</h2>
+            <div className="flex items-center p-6 sm:p-8 lg:p-10 xl:p-12">
+              <Card className="w-full border border-border/70 bg-background/90 shadow-none">
+                <CardHeader className="gap-2">
+                  <p className="font-en text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:hidden">
+                    Asset Management
+                  </p>
+                  <CardTitle className="font-en text-2xl sm:text-3xl">
+                    Login
+                  </CardTitle>
+                  <CardDescription className="space-y-1">
+                    <p className="font-en">
+                      Enter your username or email and password.
+                    </p>
+                  </CardDescription>
+                </CardHeader>
 
-          {error && (
-            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
-              <span>⚠️</span>
-              {error}
+                <CardContent>
+                  <form
+                    noValidate
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-5"
+                  >
+                    {authError && (
+                      <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        {authError}
+                      </div>
+                    )}
+
+                    <FieldGroup>
+                      <Controller
+                        name="username"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="login-username" className="font-en">
+                              Username or email
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="login-username"
+                              type="text"
+                              autoComplete="username"
+                              placeholder="username / email"
+                              className="h-11"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError className="font-en" errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+
+                      <Controller
+                        name="password"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="login-password" className="font-en">
+                              Password
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="login-password"
+                              type="password"
+                              autoComplete="current-password"
+                              placeholder="password"
+                              className="h-11"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError className="font-en" errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    </FieldGroup>
+
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="font-en h-11 w-full"
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {form.formState.isSubmitting ? "Signing in..." : "Login"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          </div>
+        </section>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Username
-              </label>
-              <input
-                type="text"
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
-                required
-                autoComplete="username"
-                placeholder="username / email"
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Password
-              </label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                required
-                autoComplete="current-password"
-                placeholder="password"
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-            >
-              {submitting ? "Loading" : "Login"}
-            </button>
-          </form>
-        </div>
-
+        <footer className="py-2 text-center text-xs text-muted-foreground sm:text-sm">
+          Built for classroom and department asset workflows
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }

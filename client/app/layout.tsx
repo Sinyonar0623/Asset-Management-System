@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+
+import { ThemeProvider } from "@/components/theme-provider";
+
 import "./globals.css";
-import { AuthProvider } from "./src/context/AuthContext";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { AuthProvider } from "../context/AuthContext";
+import { ParameterProvider } from "../context/ParameterContext";
+import {
+  appMono,
+  englishSans,
+  promptSans,
+  sarabunSans,
+} from "./fonts";
 
 export const metadata: Metadata = {
   title: "Asset Management System",
   description: "Asset Management",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -24,19 +28,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${englishSans.variable} ${promptSans.variable} ${sarabunSans.variable} ${appMono.variable} min-h-[100dvh] bg-background text-foreground antialiased font-en`}
       >
-        <AuthProvider>
-          <div className="space-y-8">
-            <div className="flex gap-3">
-
-            </div>
-            <div>{children}</div> 
-          </div>
-          
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ParameterProvider>{children}</ParameterProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
