@@ -9,11 +9,54 @@ public class AssetUnitRepository(AssetDbContext dbContext)
 {
     private readonly AssetDbContext _context = dbContext;
 
+    public async Task<List<AssetUnitDto>> GetAssetUnitsByAssetIdAsync(Guid assetId, CancellationToken cancellationToken = default)
+    {
+        return await _context.AssetUnits
+            .AsNoTracking()
+            .Where(x => EF.Property<Guid>(x, "AssetId") == assetId)
+            .Select(x => new AssetUnitDto
+            {
+                Id = x.Id,
+                AssetId = EF.Property<Guid>(x, "AssetId"),
+                AssetTag = x.AssetTag,
+                SerialNo = x.SerialNo,
+                Name = x.Name,
+                Brand = x.Brand,
+                AvailabilityStatus = x.AvailabilityStatus,
+                OperationalStatus = x.OperationalStatus,
+                Remark = x.Remark,
+                OwnerId = x.OwnerId
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AssetUnitDto?> GetAssetUnitDtoByIdAsync(Guid assetUnitId, CancellationToken cancellationToken = default)
+    {
+        return await _context.AssetUnits
+            .AsNoTracking()
+            .Where(x => x.Id == assetUnitId)
+            .Select(x => new AssetUnitDto
+            {
+                Id = x.Id,
+                AssetId = EF.Property<Guid>(x, "AssetId"),
+                AssetTag = x.AssetTag,
+                SerialNo = x.SerialNo,
+                Name = x.Name,
+                Brand = x.Brand,
+                AvailabilityStatus = x.AvailabilityStatus,
+                OperationalStatus = x.OperationalStatus,
+                Remark = x.Remark,
+                OwnerId = x.OwnerId
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<AssetUnit?> GetByIdWithHistoriesAsync(Guid assetUnitId, CancellationToken cancellationToken = default)
     {
         return await _context.AssetUnits
             .Include(x => x.Histories)
             .Include(x => x.Condition)
+            .Include(x => x.Images)
             .FirstOrDefaultAsync(x => x.Id == assetUnitId, cancellationToken);
     }
 

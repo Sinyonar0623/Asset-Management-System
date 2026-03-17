@@ -40,9 +40,9 @@ public class AssetRepository(AssetDbContext dbContext)
         var isAvailable = await _context.AssetUnits
             .AsNoTracking()
             .AnyAsync(
-                x => x.Id == assetModelId
-                     && x.AvailabilityStatus == "AVAILABLE"
-                     && x.OperationalStatus == "READY",
+                x => EF.Property<Guid>(x, "AssetId") == assetModelId
+                     && x.AvailabilityStatus == AssetUnitStatuses.Availability.Available
+                     && x.OperationalStatus == AssetUnitStatuses.Operational.Ready,
                 cancellationToken);
 
         assetModel.SetAvailability(isAvailable);

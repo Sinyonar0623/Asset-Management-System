@@ -115,6 +115,7 @@ export const ROLE_COLORS: Record<Role, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 export const LOCAL_STORAGE_KEY = "ce_asset_auth_session";
+export const AUTH_SESSION_COOKIE_KEY = "ce_asset_auth_gate";
 
 export function validateLogin(username: string, password: string): AuthSession | null {
   const user = MOCK_USERS.find(

@@ -12,9 +12,9 @@ public class CreateParameterEndpoint : ICarterModule
 
             var response = result.Adapt<CreateParameterResponse>();
 
-            return Results.Created();
+            return Results.Ok();
         }).WithName("CreateParameter")
-        .Produces<CreateParameterResponse>()
+        .Produces<CreateParameterResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Create Parameter");
     }

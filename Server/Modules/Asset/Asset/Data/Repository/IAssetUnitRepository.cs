@@ -5,6 +5,8 @@ namespace Asset.Data.Repository;
 
 public interface IAssetUnitRepository : IRepository<AssetUnit, Guid>
 {
+    Task<List<AssetUnitDto>> GetAssetUnitsByAssetIdAsync(Guid assetId, CancellationToken cancellationToken = default);
+    Task<AssetUnitDto?> GetAssetUnitDtoByIdAsync(Guid assetUnitId, CancellationToken cancellationToken = default);
     Task<AssetUnit?> GetByIdWithHistoriesAsync(Guid assetUnitId, CancellationToken cancellationToken = default);
     Task<bool> AssetTagExistsAsync(string assetTag, Guid? excludeAssetUnitId = null, CancellationToken cancellationToken = default);
     Task<bool> SerialNoExistsAsync(string serialNo, Guid? excludeAssetUnitId = null, CancellationToken cancellationToken = default);

@@ -1,5 +1,7 @@
+using Asset.Configuration;
 using Asset.Data;
 using Asset.Data.Repository;
+using Asset.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -14,9 +16,15 @@ public static class AssetModule
 {
     public static IServiceCollection AddAssetModule(this IServiceCollection services, IConfiguration configuration)
     {
+        MappingConfiguration.ConfigurationMappings();
+
         services.AddScoped<ILaboratoryRepository, LaboratoryRepository>();
+        
         services.AddScoped<IAssetRepository, AssetRepository>();
+
         services.AddScoped<IAssetUnitRepository, AssetUnitRepository>();
+        services.AddScoped<IAssetUnitService, AssetUnitService>();
+
         services.AddScoped<IUnitOfWork<AssetDbContext>, UnitOfWork<AssetDbContext>>();
 
         services.AddDbContext<AssetDbContext>((sp, options) =>

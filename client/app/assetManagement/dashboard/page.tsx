@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function DashboardPage() {
@@ -12,7 +11,13 @@ export default function DashboardPage() {
 
   return (
     <main className="px-3">
-      <Button onClick={handleLogSession}>Log session</Button>
+      <section className="flex flex-row gap-8">
+        <div className="grid grid-cols-12 gap-3">
+          <div className="col-span-4"></div>
+          <div className="col-span-4"></div>
+          <div className="col-span-4"></div>
+        </div>
+      </section>
     </main>
   );
 }

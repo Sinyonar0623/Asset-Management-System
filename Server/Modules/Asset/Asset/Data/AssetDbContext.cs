@@ -11,6 +11,7 @@ public class AssetDbContext(DbContextOptions<AssetDbContext> options) : DbContex
     public DbSet<Assets.Model.Laboratory> Laboratories => Set<Assets.Model.Laboratory>();
     public DbSet<Assets.Model.Asset> AssetModels => Set<Assets.Model.Asset>();
     public DbSet<Assets.Model.AssetUnit> AssetUnits => Set<Assets.Model.AssetUnit>();
+    public DbSet<Assets.Model.AssetUnitImage> AssetUnitImages => Set<Assets.Model.AssetUnitImage>();
     public DbSet<Assets.Model.AssetUnitCondition> AssetUnitConditions => Set<Assets.Model.AssetUnitCondition>();
     public DbSet<Outbox> OutboxMessages => Set<Outbox>();
 
