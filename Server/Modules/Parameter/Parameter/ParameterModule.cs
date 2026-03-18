@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Parameter.Data;
 using Parameter.Data.Repository;
 using Shared.Data.Extensions;
+using Shared.Data.UnitOfWork;
 
 namespace Parameter;
 
@@ -16,6 +17,7 @@ public static class ParameterModule
         service.AddScoped<IParameterService, ParameterService>();
 
         service.AddScoped<IParameterRepository, ParameterRepository>();
+        service.AddScoped<IUnitOfWork<ParameterDbContext>, UnitOfWork<ParameterDbContext>>();
 
         service.AddDbContext<ParameterDbContext>((sp, options) =>
         {

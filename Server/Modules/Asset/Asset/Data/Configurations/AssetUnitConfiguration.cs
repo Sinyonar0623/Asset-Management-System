@@ -19,16 +19,17 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
         builder.Property(u => u.AvailabilityStatus).HasMaxLength(20).IsRequired();
         builder.Property(u => u.OperationalStatus).HasMaxLength(20).IsRequired();
         builder.Property(u => u.Remark).HasMaxLength(500).IsRequired();
-        builder.Property(u => u.OwnerId).IsRequired();
+        builder.Property(u => u.OwnerId).IsRequired(false);
         builder.HasIndex(u => u.AssetTag).IsUnique();
         builder.HasIndex(u => u.SerialNo).IsUnique();
 
-        builder.Property<Guid>("AssetId");
+        builder.Property<Guid?>("AssetId");
         builder.HasIndex("AssetId");
 
         builder.HasOne(a => a.Asset)
             .WithMany()
             .HasForeignKey("AssetId")
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(a => a.Condition)

@@ -1,11 +1,11 @@
 using Asset.Assets.Model;
 using Microsoft.EntityFrameworkCore;
-using Shared.Data.Repository;
+using Shared.Data;
 
-namespace Asset.Data.Repository;
+namespace Asset.Data.Repository.Read;
 
-public class LaboratoryRepository(AssetDbContext dbContext)
-    : Repository<Laboratory, Guid>(dbContext), ILaboratoryRepository
+public class LaboratoryReadRepository(AssetDbContext dbContext)
+    : BaseReadRepository<Laboratory, Guid>(dbContext), ILaboratoryReadRepository
 {
     private readonly AssetDbContext _context = dbContext;
 

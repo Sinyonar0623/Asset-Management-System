@@ -54,7 +54,7 @@ namespace Asset.Data.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("LaboratoryId")
+                    b.Property<Guid?>("LaboratoryId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -82,7 +82,7 @@ namespace Asset.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("AssetUnitId");
 
-                    b.Property<Guid>("AssetId")
+                    b.Property<Guid?>("AssetId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("AssetTag")
@@ -119,7 +119,7 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("OwnerId")
+                    b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Remark")
@@ -364,8 +364,7 @@ namespace Asset.Data.Migrations
                     b.HasOne("Asset.Assets.Model.Laboratory", "Laboratory")
                         .WithMany()
                         .HasForeignKey("LaboratoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Laboratory");
                 });
@@ -375,8 +374,7 @@ namespace Asset.Data.Migrations
                     b.HasOne("Asset.Assets.Model.Asset", "Asset")
                         .WithMany()
                         .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.OwnsMany("Asset.Assets.ValueObject.AssetHistory", "Histories", b1 =>
                         {

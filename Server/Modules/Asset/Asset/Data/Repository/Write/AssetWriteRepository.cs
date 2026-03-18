@@ -1,30 +1,18 @@
 using Asset.Assets.Model;
 using Microsoft.EntityFrameworkCore;
-using Shared.Data.Repository;
+using Shared.Data;
 
-namespace Asset.Data.Repository;
+namespace Asset.Data.Repository.Write;
 
-public class AssetRepository(AssetDbContext dbContext)
-    : Repository<Assets.Model.Asset, Guid>(dbContext), IAssetRepository
+public class AssetWriteRepository(AssetDbContext dbContext)
+    : BaseRepository<Assets.Model.Asset, Guid>(dbContext), IAssetWriteRepository
 {
     private readonly AssetDbContext _context = dbContext;
 
-    public async Task<bool> NameExistsInLaboratoryAsync(
-        Guid laboratoryId,
-        string name,
-        Guid? excludeAssetModelId = null,
-        CancellationToken cancellationToken = default)
+    public override async Task<Assets.Model.Asset?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var query = _context.Laboratories
-            .AsNoTracking()
-            .Where(x => x.Id == laboratoryId );
-
-        if (excludeAssetModelId.HasValue)
-        {
-            query = query.Where(x => x.Id != excludeAssetModelId.Value);
-        }
-
-        return await query.AnyAsync(cancellationToken);
+        return await _context.AssetModels
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task SyncAvailabilityAsync(Guid assetModelId, CancellationToken cancellationToken = default)
@@ -40,7 +28,7 @@ public class AssetRepository(AssetDbContext dbContext)
         var isAvailable = await _context.AssetUnits
             .AsNoTracking()
             .AnyAsync(
-                x => EF.Property<Guid>(x, "AssetId") == assetModelId
+                x => EF.Property<Guid?>(x, "AssetId") == assetModelId
                      && x.AvailabilityStatus == AssetUnitStatuses.Availability.Available
                      && x.OperationalStatus == AssetUnitStatuses.Operational.Ready,
                 cancellationToken);

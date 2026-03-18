@@ -12,9 +12,9 @@ public class AssetUnit : Aggregate<Guid>
     public string AvailabilityStatus { get; private set; } = null!;
     public string OperationalStatus { get; private set; } = null!;
     public string Remark { get; private set; } = null!;
-    public Guid OwnerId { get; private set; }
+    public Guid? OwnerId { get; private set; }
 
-    public Asset Asset { get; private set; } = default!;
+    public Asset? Asset { get; private set; }
     public AssetUnitCondition? Condition { get; private set; }
     private readonly List<AssetUnitImage> _images = [];
     public IReadOnlyList<AssetUnitImage> Images => _images.AsReadOnly();
@@ -32,7 +32,7 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid ownerId)
+        Guid? ownerId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
@@ -51,7 +51,7 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid ownerId)
+        Guid? ownerId)
     {
         return new AssetUnit(
             assetTag,
@@ -77,7 +77,7 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid ownerId)
+        Guid? ownerId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
@@ -197,7 +197,7 @@ public class AssetUnit : Aggregate<Guid>
         Condition = null;
     }
 
-    public void AssignAssets(Asset asset)
+    public void AssignAsset(Asset asset)
     {
         Asset = asset;
     }

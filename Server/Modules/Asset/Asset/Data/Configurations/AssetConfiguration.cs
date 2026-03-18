@@ -19,7 +19,7 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset.Assets.Model.As
         builder.Property(m => m.Category).HasMaxLength(20).IsRequired();
         builder.Property(m => m.IsAvailable).IsRequired();
 
-        builder.Property<Guid>("LaboratoryId");
+        builder.Property<Guid?>("LaboratoryId");
         builder.HasIndex("LaboratoryId");
 
         builder.HasOne(m => m.Laboratory)

@@ -1,7 +1,10 @@
 using Asset.Configuration;
 using Asset.Data;
-using Asset.Data.Repository;
+using Asset.Data.Repository.Read;
+using Asset.Data.Repository.Write;
 using Asset.Service;
+using Asset.Service.CommandHandlerService;
+using Asset.Service.EventHandlerService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -18,12 +21,17 @@ public static class AssetModule
     {
         MappingConfiguration.ConfigurationMappings();
 
-        services.AddScoped<ILaboratoryRepository, LaboratoryRepository>();
-        
-        services.AddScoped<IAssetRepository, AssetRepository>();
+        services.AddScoped<ILaboratoryReadRepository, LaboratoryReadRepository>();
+        services.AddScoped<ILaboratoryWriteRepository, LaboratoryWriteRepository>();
 
-        services.AddScoped<IAssetUnitRepository, AssetUnitRepository>();
-        services.AddScoped<IAssetUnitService, AssetUnitService>();
+        services.AddScoped<IAssetCommandHandlerService, AssetCommandHandlerService>();
+        services.AddScoped<IAssetReadRepository, AssetReadRepository>();
+        services.AddScoped<IAssetWriteRepository, AssetWriteRepository>();
+
+        services.AddScoped<IAssetUnitReadRepository, AssetUnitReadRepository>();
+        services.AddScoped<IAssetUnitWriteRepository, AssetUnitWriteRepository>();
+        services.AddScoped<IAssetUnitCommandHandlerService, AssetUnitCommandHandlerService>();
+        services.AddScoped<IAssetUnitEventHandlerService, AssetUnitEventHandlerService>();
 
         services.AddScoped<IUnitOfWork<AssetDbContext>, UnitOfWork<AssetDbContext>>();
 

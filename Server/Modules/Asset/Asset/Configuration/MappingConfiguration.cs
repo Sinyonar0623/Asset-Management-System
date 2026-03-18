@@ -24,8 +24,7 @@ public static class MappingConfiguration
             .ConstructUsing(src => AssetModel.Create(
                 src.Name,
                 src.Description,
-                src.Category,
-                src.IsAvailable
+                src.Category
             ));
 
         TypeAdapterConfig<AssetHistoryDto, AssetHistory>
@@ -74,6 +73,6 @@ public static class MappingConfiguration
 
         TypeAdapterConfig<AssetUnit, AssetUnitDto>
             .NewConfig()
-            .Map(dest => dest.AssetId, "Asset.Id");
+            .Map(dest => dest.AssetId, src => src.Asset != null ? src.Asset.Id : (Guid?)null);
     }
 }

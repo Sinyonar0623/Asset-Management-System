@@ -1,4 +1,4 @@
-using Shared.Data.Repository;
+using Shared.Data;
 
 namespace Shared.Outbox.Repository;
 

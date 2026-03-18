@@ -1,10 +1,10 @@
 using Auth.Authentication.Model;
 using Microsoft.EntityFrameworkCore;
-using Shared.Data.Repository;
+using Shared.Data;
 
 namespace Auth.Data.Repository;
 
-public class AuthRepository(AuthDbContext dbContext) : Repository<UserName, Guid>(dbContext), IAuthRepository
+public class AuthRepository(AuthDbContext dbContext) : BaseRepository<UserName, Guid>(dbContext), IAuthRepository
 {
     private readonly AuthDbContext _context = dbContext;
 
@@ -34,3 +34,4 @@ public class AuthRepository(AuthDbContext dbContext) : Repository<UserName, Guid
             .FirstOrDefaultAsync(x => x.RoleCode == roleCode, cancellationToken);
     }
 }
+

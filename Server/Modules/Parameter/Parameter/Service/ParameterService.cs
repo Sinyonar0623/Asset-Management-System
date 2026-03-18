@@ -1,12 +1,17 @@
 using Mapster;
+using Parameter.Data;
 using Parameter.Data.Repository;
 using Parameter.Dto;
+using Shared.Data.UnitOfWork;
 
 namespace Parameter.Service;
 
-public class ParameterService(IParameterRepository parameterRepository) : IParameterService
+public class ParameterService(
+    IParameterRepository parameterRepository,
+    IUnitOfWork<ParameterDbContext> unitOfWork) : IParameterService
 {
     private readonly IParameterRepository _repository = parameterRepository;
+    private readonly IUnitOfWork<ParameterDbContext> _unitOfWork = unitOfWork;
 
     public async Task<long> CreateParameter(ParameterDto parameter)
     {
@@ -16,7 +21,7 @@ public class ParameterService(IParameterRepository parameterRepository) : IParam
 
         await _repository.AddAsync(newParameter);
 
-        await _repository.SaveChangeAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return newParameter.Id;
     }
@@ -26,7 +31,7 @@ public class ParameterService(IParameterRepository parameterRepository) : IParam
         var p = await GetRequiredParameter(id);
 
         p.Disable();
-        await _repository.SaveChangeAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task EnableParameter(long id)
@@ -34,7 +39,7 @@ public class ParameterService(IParameterRepository parameterRepository) : IParam
         var p = await GetRequiredParameter(id);
 
         p.Enable();
-        await _repository.SaveChangeAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UpdateParameter(long id, ParameterDto parameter)
@@ -54,7 +59,7 @@ public class ParameterService(IParameterRepository parameterRepository) : IParam
             entity.Disable();
         }
 
-        await _repository.SaveChangeAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteParameter(long id)
@@ -62,7 +67,7 @@ public class ParameterService(IParameterRepository parameterRepository) : IParam
         var entity = await GetRequiredParameter(id);
 
         await _repository.DeleteAsync(entity);
-        await _repository.SaveChangeAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<List<ParameterDto>> GetParameters()
