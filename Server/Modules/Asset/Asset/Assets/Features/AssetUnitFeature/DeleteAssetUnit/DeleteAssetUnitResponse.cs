@@ -1,3 +1,3 @@
 namespace Asset.Assets.Features.AssetUnitFeature.DeleteAssetUnit;
 
-public record DeleteAssetUnitResponse(Guid Id);
+public record DeleteAssetUnitResponse(bool IsSuccess);

@@ -60,7 +60,7 @@ public class AssetUnitCommandHandlerService(
         return [.. newAssetUnits.Select(x => x.Id)];
     }
 
-    public async Task<Guid> UpdateAssetUnit(Guid assetUnitId, AssetUnitDto assetUnit, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAssetUnit(Guid assetUnitId, AssetUnitDto assetUnit, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(assetUnit);
 
@@ -96,10 +96,10 @@ public class AssetUnitCommandHandlerService(
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return assetUnitId;
+        return true;
     }
 
-    public async Task<Guid> DeleteAssetUnit(Guid assetUnitId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAssetUnit(Guid assetUnitId, CancellationToken cancellationToken = default)
     {
         var currentAssetUnit = await _assetUnitReadRepository.GetAssetUnitDtoByIdAsync(assetUnitId, cancellationToken)
             ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
@@ -108,7 +108,7 @@ public class AssetUnitCommandHandlerService(
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return assetUnitId;
+        return true;
     }
 
     public async Task<List<AssetUnitDto>> GetAssetUnitsByAssetId(Guid assetId, CancellationToken cancellationToken = default)

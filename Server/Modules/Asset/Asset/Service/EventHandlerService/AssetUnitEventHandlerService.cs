@@ -5,9 +5,31 @@ using Asset.Data.Repository.Write;
 namespace Asset.Service.EventHandlerService;
 
 public class AssetUnitEventHandlerService(
-    IAssetUnitWriteRepository assetUnitWriteRepository) : IAssetUnitEventHandlerService
+    IAssetUnitWriteRepository assetUnitWriteRepository,
+    IAssetUnitReadRepository assetUnitReadRepository
+    ) : IAssetUnitEventHandlerService
 {
     private readonly IAssetUnitWriteRepository _assetUnitWriteRepository = assetUnitWriteRepository;
+    private readonly IAssetUnitReadRepository _assetUnitReadRepository = assetUnitReadRepository;
+
+    public async Task<bool> AssignAssetUnit(Assets.Model.Asset asset, List<Guid> assetUnitId, CancellationToken cancellationToken)
+    {
+        if (asset is null)
+            throw new KeyNotFoundException($"Asset was not found.");
+
+        var units = await _assetUnitWriteRepository.GetAssetUnitsByAssetIdAsync(asset.Id, cancellationToken);
+
+        foreach (var unit in units)
+        {
+            if (unit.Asset is not null || AssetUnitStatuses.IsReadyForAssignAsset(unit.AvailabilityStatus, unit.OperationalStatus))
+                throw new KeyNotFoundException($"Asset unit with id was conflict.");
+
+            unit.AssignAsset(asset);
+        }
+
+        return true;
+    }
+
 
     public async Task<AssetUnit?> GetAssetUnitById(Guid assetUnitId, CancellationToken cancellationToken = default)
     {

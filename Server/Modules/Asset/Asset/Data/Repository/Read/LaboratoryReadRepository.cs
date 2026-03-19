@@ -13,6 +13,6 @@ public class LaboratoryReadRepository(AssetDbContext dbContext)
     {
         return await _context.AssetModels
             .AsNoTracking()
-            .AnyAsync(x => x.Id == laboratoryId, cancellationToken);
+            .AnyAsync(x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId, cancellationToken);
     }
 }

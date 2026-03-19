@@ -202,6 +202,11 @@ public class AssetUnit : Aggregate<Guid>
         Asset = asset;
     }
 
+    public void UnassignAsset()
+    {
+        Asset = null;
+    }
+
     private void SetStatuses(string availabilityStatus, string operationalStatus)
     {
         AvailabilityStatus = NormalizeAvailabilityStatus(availabilityStatus);

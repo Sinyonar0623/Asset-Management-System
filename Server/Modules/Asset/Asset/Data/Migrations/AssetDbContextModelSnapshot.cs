@@ -301,6 +301,71 @@ namespace Asset.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Laboratories", "asset");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000101"),
+                            CreateBy = "SYSTEM",
+                            Description = "Primary lab for programming courses",
+                            LaboratoryName = "CPE Programming Lab 1",
+                            RoomNo = "G-601",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001001")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000102"),
+                            CreateBy = "SYSTEM",
+                            Description = "Advanced programming and web development",
+                            LaboratoryName = "CPE Programming Lab 2",
+                            RoomNo = "G-602",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001002")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000103"),
+                            CreateBy = "SYSTEM",
+                            Description = "Networking, routing, and server configuration",
+                            LaboratoryName = "CPE Network Lab",
+                            RoomNo = "G-603",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001003")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000104"),
+                            CreateBy = "SYSTEM",
+                            Description = "Microcontroller and IoT experiments",
+                            LaboratoryName = "CPE Embedded Systems Lab",
+                            RoomNo = "G-604",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001004")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000105"),
+                            CreateBy = "SYSTEM",
+                            Description = "Digital logic and circuit practice",
+                            LaboratoryName = "CPE Hardware Lab",
+                            RoomNo = "G-605",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001005")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000106"),
+                            CreateBy = "SYSTEM",
+                            Description = "CPU and low-level system study",
+                            LaboratoryName = "CPE Computer Architecture Lab",
+                            RoomNo = "G-606",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001006")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000107"),
+                            CreateBy = "SYSTEM",
+                            Description = "Workspace for final year projects",
+                            LaboratoryName = "CPE Senior Project Lab",
+                            RoomNo = "G-607",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001007")
+                        });
                 });
 
             modelBuilder.Entity("Shared.Outbox.Model.Outbox", b =>
@@ -374,7 +439,7 @@ namespace Asset.Data.Migrations
                     b.HasOne("Asset.Assets.Model.Asset", "Asset")
                         .WithMany()
                         .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsMany("Asset.Assets.ValueObject.AssetHistory", "Histories", b1 =>
                         {

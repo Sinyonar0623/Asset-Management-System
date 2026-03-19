@@ -5,20 +5,16 @@ using MediatR;
 namespace Asset.Assets.EventHandler;
 
 public sealed class AssignAssetUnitsEventHandler(
-    IAssetUnitEventHandlerService _service
+    IAssetUnitEventHandlerService service
 )
     : INotificationHandler<AssignAssetUnitsEvent>
 {
+    private readonly IAssetUnitEventHandlerService _service = service;
     public async Task Handle(AssignAssetUnitsEvent notification, CancellationToken cancellationToken)
     {
         var asset = notification.Asset;
 
-        foreach (var unit in notification.AssetUnitId)
-        {
-            var assetUnit = await _service.GetAssetUnitById(unit, cancellationToken);
-
-            assetUnit?.AssignAsset(asset);
-        }
+        await _service.AssignAssetUnit(asset, notification.AssetUnitId, cancellationToken);
     }
 
 }

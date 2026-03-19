@@ -30,7 +30,7 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
             .WithMany()
             .HasForeignKey("AssetId")
             .IsRequired(false)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(a => a.Condition)
             .WithOne(c => c.AssetUnit)

@@ -47,4 +47,10 @@ public static class AssetUnitStatuses
     {
         return Operational.All.Contains(status);
     }
+
+    public static bool IsReadyForAssignAsset(string availabilityStatus, string operationalStatus)
+    {
+        return availabilityStatus == Availability.Available
+            && operationalStatus == Operational.Ready;
+    }
 }

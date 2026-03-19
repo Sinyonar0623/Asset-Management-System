@@ -8,8 +8,8 @@ public class DeleteAssetUnitCommandHandler(IAssetUnitCommandHandlerService servi
     private readonly IAssetUnitCommandHandlerService _service = service;
     public async Task<DeleteAssetUnitResult> Handle(DeleteAssetUnitCommand request, CancellationToken cancellationToken)
     {
-        var id = await _service.DeleteAssetUnit(request.Id, cancellationToken);
+        var result = await _service.DeleteAssetUnit(request.Id, cancellationToken);
 
-        return new DeleteAssetUnitResult(id);
+        return new DeleteAssetUnitResult(result);
     }
 }

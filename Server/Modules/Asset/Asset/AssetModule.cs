@@ -23,6 +23,7 @@ public static class AssetModule
 
         services.AddScoped<ILaboratoryReadRepository, LaboratoryReadRepository>();
         services.AddScoped<ILaboratoryWriteRepository, LaboratoryWriteRepository>();
+        services.AddScoped<ILaboratoryCommandHandlerService, LaboratoryCommandHandlerService>();
 
         services.AddScoped<IAssetCommandHandlerService, AssetCommandHandlerService>();
         services.AddScoped<IAssetReadRepository, AssetReadRepository>();

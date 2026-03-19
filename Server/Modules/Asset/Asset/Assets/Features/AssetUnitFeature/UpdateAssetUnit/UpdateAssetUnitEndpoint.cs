@@ -17,7 +17,7 @@ public class UpdateAssetUnitEndpoint : ICarterModule
                     new UpdateAssetUnitCommand(id, request.AssetUnit),
                     cancellationToken);
 
-                var response = new UpdateAssetUnitResponse(result.Id);
+                var response = new UpdateAssetUnitResponse(result.IsSuccess);
 
                 return Results.Ok(response);
             })

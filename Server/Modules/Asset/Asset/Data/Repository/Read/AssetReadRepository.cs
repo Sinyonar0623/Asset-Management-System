@@ -8,6 +8,20 @@ public class AssetReadRepository(AssetDbContext dbContext)
 {
     private readonly AssetDbContext _context = dbContext;
 
+    public async Task<long> GetAssetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.AssetModels
+            .AsNoTracking()
+            .LongCountAsync(cancellationToken);
+    }
+
+    public async Task<long> GetAssetCountByLaboratoryIdAsync(Guid laboratoryId, CancellationToken cancellationToken = default)
+    {
+        return await _context.AssetModels
+            .AsNoTracking()
+            .LongCountAsync(x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId, cancellationToken);
+    }
+
     public async Task<bool> NameExistsInLaboratoryAsync(
         Guid laboratoryId,
         string name,

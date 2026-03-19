@@ -15,14 +15,23 @@ public class CreateAssetCommandHandler(
     private readonly IAssetCommandHandlerService _service = service;
     public async Task<CreateAssetResult> Handle(CreateAssetCommand request, CancellationToken cancellationToken)
     {
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-        var result = await _service.CreateAsset(request.Asset, request.Units, cancellationToken);
+            var result = await _service.CreateAsset(request.Asset, request.Units, cancellationToken);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _unitOfWork.CommitTransactionAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-        return result.Adapt<CreateAssetResult>();
+            return result.Adapt<CreateAssetResult>();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+            
+            throw;
+        }
     }
 }

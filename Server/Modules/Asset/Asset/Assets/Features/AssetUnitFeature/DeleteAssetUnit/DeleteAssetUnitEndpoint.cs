@@ -14,7 +14,8 @@ public class DeleteAssetUnitEndpoint : ICarterModule
             async (Guid id, ISender sender, CancellationToken cancellationToken) =>
             {
                 var result = await sender.Send(new DeleteAssetUnitCommand(id), cancellationToken);
-                var response = new DeleteAssetUnitResponse(result.Id);
+
+                var response = new DeleteAssetUnitResponse(true);
 
                 return Results.Ok(response);
             })
