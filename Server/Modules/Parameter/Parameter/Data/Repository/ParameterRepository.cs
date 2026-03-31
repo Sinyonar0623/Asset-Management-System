@@ -1,10 +1,10 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Parameter.Dto;
-using Shared.Data.Repository;
+using Shared.Data;
 
 namespace Parameter.Data.Repository;
-public class ParameterRepository(ParameterDbContext dbContext) : Repository<Parameters.Model.Parameter, long>(dbContext), IParameterRepository
+public class ParameterRepository(ParameterDbContext dbContext) : BaseRepository<Parameters.Model.Parameter, long>(dbContext), IParameterRepository
 {
     private readonly ParameterDbContext _context = dbContext;
 

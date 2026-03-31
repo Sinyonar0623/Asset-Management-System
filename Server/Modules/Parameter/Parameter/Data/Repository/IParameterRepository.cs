@@ -1,5 +1,5 @@
 using Parameter.Dto;
-using Shared.Data.Repository;
+using Shared.Data;
 
 namespace Parameter.Data.Repository;
 

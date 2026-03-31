@@ -254,12 +254,14 @@ Response:
 
 ### 6.2 Start Infrastructure
 
-1. Ensure `.env` exists at repo root and contains:
+1. Create `.env` from `.env.example` at repo root.
+2. Set compose secrets in `.env`:
+- `DB_USER`
 - `DB_PASS`
+- `DB_NAME`
 - `RABBITMQ_USER`
 - `RABBITMQ_PASS`
-
-2. Start containers:
+3. Start containers:
 
 ```powershell
 docker compose up -d
@@ -270,7 +272,32 @@ Services:
 - RabbitMQ AMQP: `localhost:5672`
 - RabbitMQ UI: `http://localhost:15672`
 
-### 6.3 Apply Database Migrations
+### 6.3 Configure API Secrets (User Secrets or Environment Variables)
+
+The API now fails fast if `ConnectionStrings:Database` or `Jwt:Key` is missing/weak.
+
+Local development using `dotnet user-secrets` (recommended):
+
+```powershell
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "ConnectionStrings:Database" "Host=localhost;Port=5433;Database=AssetManagementDb;Username=postgres;Password=<DB_PASSWORD>"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Issuer" "AssetApi"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Audience" "AssetFrontend"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Key" "<RANDOM_KEY_MIN_32_CHARS>"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Host" "amqp://localhost:5672/"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Username" "<RABBITMQ_USER>"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Password" "<RABBITMQ_PASSWORD>"
+```
+
+CI/CD or container runtime can use environment variables:
+- `ConnectionStrings__Database`
+- `Jwt__Issuer`
+- `Jwt__Audience`
+- `Jwt__Key`
+- `RabbitMQ__Host`
+- `RabbitMQ__Username`
+- `RabbitMQ__Password`
+
+### 6.4 Apply Database Migrations
 
 Option A: run per context directly:
 
@@ -287,7 +314,7 @@ Option B: use helper script:
 .\scripts\ef-migrations.ps1 -Action update -Context all
 ```
 
-### 6.4 Seed Roles (Required for Sign Up/Login)
+### 6.5 Seed Roles (Required for Sign Up/Login)
 
 There is currently no checked-in `CREATE.sql` seed file in `Server/Modules/Auth/Auth/Data/`.
 
@@ -304,7 +331,7 @@ VALUES
 
 Adjust role codes/names to match your business rules.
 
-### 6.5 Run Backend
+### 6.6 Run Backend
 
 ```powershell
 dotnet restore
@@ -316,7 +343,7 @@ Default launch URLs:
 - `http://localhost:5176`
 - `https://localhost:7158`
 
-### 6.6 Run Frontend
+### 6.7 Run Frontend
 
 ```powershell
 cd ClientApp
@@ -361,6 +388,12 @@ Main files:
 - `Server/Application/Api/appsettings.Development.json`
 - `Server/Application/Api/Properties/launchSettings.json`
 - `.env`
+- `.env.example`
+
+Secret policy:
+- Do not commit secrets in `appsettings*.json`.
+- Use `dotnet user-secrets` for local development.
+- Use environment variables / secret manager in deployment.
 
 Important JWT settings:
 - `Jwt:Issuer`
@@ -374,6 +407,11 @@ Important JWT settings:
 - Duplicate login is blocked using `Session` and `SessionActiveOn` fields in `auth.UserName`.
 - Logout clears server-side session state.
 - Access tokens remain valid until expiration unless revocation/blacklist is added.
+- JWT key rotation:
+1. Generate a new key (at least 32 chars, random).
+2. Update `Jwt__Key` in secret manager/environment.
+3. Restart API instances.
+4. Existing tokens signed with old key become invalid after rotation.
 
 ## 10) Known Gaps / Next Steps
 

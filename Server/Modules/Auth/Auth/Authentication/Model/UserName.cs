@@ -8,6 +8,7 @@ public class UserName : Aggregate<Guid>
     public string Username { get; private set; } = default!;
     public string Email { get; private set; } = default!;
     public string PasswordHash { get; private set; } = default!;
+    public Guid? LaboratoryId {get; private set;} 
     public Guid? Session { get; private set; }
     public DateTime? SessionActiveOn { get; private set; }
 
@@ -57,5 +58,10 @@ public class UserName : Aggregate<Guid>
     {
         Session = null;
         SessionActiveOn = null;
+    }
+
+    public void AssignLaboratory(Guid LabId)
+    {
+        LaboratoryId = LabId;
     }
 }

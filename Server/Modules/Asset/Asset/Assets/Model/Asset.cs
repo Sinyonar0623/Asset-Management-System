@@ -9,7 +9,7 @@ public class Asset : Aggregate<Guid>
     public string Category { get; private set; } = null!;
     public bool IsAvailable { get; private set; }
 
-    public Laboratory Laboratory { get; private set; } = default!;
+    public Laboratory? Laboratory { get; private set; }
 
     private Asset() {}
 

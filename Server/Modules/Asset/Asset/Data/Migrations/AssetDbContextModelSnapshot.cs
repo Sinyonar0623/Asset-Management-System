@@ -54,7 +54,7 @@ namespace Asset.Data.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("LaboratoryId")
+                    b.Property<Guid?>("LaboratoryId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -82,7 +82,7 @@ namespace Asset.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("AssetUnitId");
 
-                    b.Property<Guid>("AssetId")
+                    b.Property<Guid?>("AssetId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("AssetTag")
@@ -119,7 +119,7 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("OwnerId")
+                    b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Remark")
@@ -203,6 +203,59 @@ namespace Asset.Data.Migrations
                     b.ToTable("AssetUnitConditions", "asset");
                 });
 
+            modelBuilder.Entity("Asset.Assets.Model.AssetUnitImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("AssetUnitImageId");
+
+                    b.Property<Guid>("AssetUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CreateBy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("SYSTEM");
+
+                    b.Property<DateTime?>("CreateOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long?>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UpdateBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdateOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetUnitId");
+
+                    b.ToTable("AssetUnitImages", "asset");
+                });
+
             modelBuilder.Entity("Asset.Assets.Model.Laboratory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -248,6 +301,71 @@ namespace Asset.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Laboratories", "asset");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000101"),
+                            CreateBy = "SYSTEM",
+                            Description = "Primary lab for programming courses",
+                            LaboratoryName = "CPE Programming Lab 1",
+                            RoomNo = "G-601",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001001")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000102"),
+                            CreateBy = "SYSTEM",
+                            Description = "Advanced programming and web development",
+                            LaboratoryName = "CPE Programming Lab 2",
+                            RoomNo = "G-602",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001002")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000103"),
+                            CreateBy = "SYSTEM",
+                            Description = "Networking, routing, and server configuration",
+                            LaboratoryName = "CPE Network Lab",
+                            RoomNo = "G-603",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001003")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000104"),
+                            CreateBy = "SYSTEM",
+                            Description = "Microcontroller and IoT experiments",
+                            LaboratoryName = "CPE Embedded Systems Lab",
+                            RoomNo = "G-604",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001004")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000105"),
+                            CreateBy = "SYSTEM",
+                            Description = "Digital logic and circuit practice",
+                            LaboratoryName = "CPE Hardware Lab",
+                            RoomNo = "G-605",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001005")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000106"),
+                            CreateBy = "SYSTEM",
+                            Description = "CPU and low-level system study",
+                            LaboratoryName = "CPE Computer Architecture Lab",
+                            RoomNo = "G-606",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001006")
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000107"),
+                            CreateBy = "SYSTEM",
+                            Description = "Workspace for final year projects",
+                            LaboratoryName = "CPE Senior Project Lab",
+                            RoomNo = "G-607",
+                            TeacherId = new Guid("00000000-0000-0000-0000-000000001007")
+                        });
                 });
 
             modelBuilder.Entity("Shared.Outbox.Model.Outbox", b =>
@@ -311,8 +429,7 @@ namespace Asset.Data.Migrations
                     b.HasOne("Asset.Assets.Model.Laboratory", "Laboratory")
                         .WithMany()
                         .HasForeignKey("LaboratoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Laboratory");
                 });
@@ -322,8 +439,7 @@ namespace Asset.Data.Migrations
                     b.HasOne("Asset.Assets.Model.Asset", "Asset")
                         .WithMany()
                         .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsMany("Asset.Assets.ValueObject.AssetHistory", "Histories", b1 =>
                         {
@@ -336,19 +452,53 @@ namespace Asset.Data.Migrations
 
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
-                            b1.Property<DateTime>("ApproveAt")
+                            b1.Property<string>("ActionType")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)");
+
+                            b1.Property<DateTime?>("ApprovedAt")
                                 .HasColumnType("timestamp with time zone");
 
-                            b1.Property<Guid>("ApproveBy")
+                            b1.Property<Guid?>("ApprovedBy")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Purpose")
-                                .IsRequired()
-                                .HasColumnType("text");
+                            b1.Property<string>("FromAvailabilityStatus")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("FromOperationalStatus")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<Guid?>("FromOwnerId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("PerformedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid>("PerformedBy")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ReferenceNo")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<string>("Remark")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
+
+                            b1.Property<string>("ToAvailabilityStatus")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("ToOperationalStatus")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<Guid?>("ToOwnerId")
+                                .HasColumnType("uuid");
 
                             b1.HasKey("AssetUnitId", "Id");
 
@@ -374,9 +524,22 @@ namespace Asset.Data.Migrations
                     b.Navigation("AssetUnit");
                 });
 
+            modelBuilder.Entity("Asset.Assets.Model.AssetUnitImage", b =>
+                {
+                    b.HasOne("Asset.Assets.Model.AssetUnit", "AssetUnit")
+                        .WithMany("Images")
+                        .HasForeignKey("AssetUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssetUnit");
+                });
+
             modelBuilder.Entity("Asset.Assets.Model.AssetUnit", b =>
                 {
                     b.Navigation("Condition");
+
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

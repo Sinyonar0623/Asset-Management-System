@@ -1,22 +1,25 @@
-using System.Linq.Expressions;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Shared.DDD;
 
-namespace Shared.Data.Repository;
-
-public interface IRepository<T, TId> where T : class, IEntity<TId>
+namespace Shared.Data
 {
-    Task AddAsync(T entity, CancellationToken cancellationToken = default);
-    Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
-    Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
-    Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
-    Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
-
-    Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
-    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
-
-    Task BeginTransaction(CancellationToken cancellationToken = default);
-    Task CommitTransaction(CancellationToken cancellationToken = default);
-    Task SaveChangeAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Interface for repository operations.
+    /// </summary>
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TId">The entity ID type.</typeparam>
+    public interface IRepository<T, TId> : IReadRepository<T, TId> where T : IEntity<TId>
+    {
+        // Write operations
+        Task AddAsync(T entity, CancellationToken cancellationToken = default);
+        Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
+        Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
+        Task DeleteAsync(TId id, CancellationToken cancellationToken = default);
+        Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+    }
 }

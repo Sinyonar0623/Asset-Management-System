@@ -41,4 +41,15 @@ public class Parameter : Aggregate<long>
     {
         Active = true;
     }
+
+    public void Update(
+        string group,
+        string value,
+        string description
+    )
+    {
+        Group = group;
+        Value = value;
+        Description = description;
+    }
 }
