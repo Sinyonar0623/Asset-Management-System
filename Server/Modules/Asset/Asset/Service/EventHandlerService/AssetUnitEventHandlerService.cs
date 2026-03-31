@@ -17,11 +17,24 @@ public class AssetUnitEventHandlerService(
         if (asset is null)
             throw new KeyNotFoundException($"Asset was not found.");
 
-        var units = await _assetUnitWriteRepository.GetAssetUnitsByAssetIdAsync(asset.Id, cancellationToken);
+        if (assetUnitId is null || assetUnitId.Count == 0)
+            return true;
+
+        var requestedUnitIds = assetUnitId
+            .Distinct()
+            .ToList();
+
+        var units = await _assetUnitWriteRepository.GetAssetUnitsByIdsAsync(requestedUnitIds, cancellationToken);
+
+        if (units.Count != requestedUnitIds.Count)
+            throw new KeyNotFoundException($"New asset unit was not found.");
 
         foreach (var unit in units)
         {
-            if (unit.Asset is not null || AssetUnitStatuses.IsReadyForAssignAsset(unit.AvailabilityStatus, unit.OperationalStatus))
+            if (unit.Asset is not null)
+                throw new KeyNotFoundException($"Asset unit with id was conflict.");
+
+            if (!AssetUnitStatuses.IsReadyForAssignAsset(unit.AvailabilityStatus, unit.OperationalStatus))
                 throw new KeyNotFoundException($"Asset unit with id was conflict.");
 
             unit.AssignAsset(asset);

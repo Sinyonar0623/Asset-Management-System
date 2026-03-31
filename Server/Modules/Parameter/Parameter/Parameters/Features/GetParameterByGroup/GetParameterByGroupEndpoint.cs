@@ -6,7 +6,7 @@ public class GetParameterByGroupEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/Parameters/{group:alpha}", async (string group, [AsParameters] PaginationRequest request, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("/Parameters/{group}", async (string group, [AsParameters] PaginationRequest request, ISender sender, CancellationToken cancellationToken) =>
         {
             var query = new GetParameterByGroupQuery(request, group);
 

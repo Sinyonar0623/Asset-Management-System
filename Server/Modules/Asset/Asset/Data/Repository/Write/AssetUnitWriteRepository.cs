@@ -56,6 +56,21 @@ public class AssetUnitWriteRepository(AssetDbContext dbContext)
         return await query.AnyAsync(cancellationToken);
     }
 
+    public async Task<List<AssetUnit>> GetAssetUnitsByIdsAsync(
+        IReadOnlyCollection<Guid> assetUnitIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (assetUnitIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.AssetUnits
+            .Where(x => assetUnitIds.Contains(x.Id))
+            .Include(x => x.Asset)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<AssetUnit>> GetAssetUnitsByAssetIdAsync(Guid assetId, CancellationToken cancellationToken = default)
     {
         var assetUnits = await _context.AssetUnits

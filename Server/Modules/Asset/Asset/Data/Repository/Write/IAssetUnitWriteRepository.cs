@@ -17,5 +17,9 @@ public interface IAssetUnitWriteRepository : IRepository<AssetUnit, Guid>
         Guid? excludeAssetUnitId = null,
         CancellationToken cancellationToken = default);
 
+    Task<List<AssetUnit>> GetAssetUnitsByIdsAsync(
+        IReadOnlyCollection<Guid> assetUnitIds,
+        CancellationToken cancellationToken = default);
+
     Task<List<AssetUnit>> GetAssetUnitsByAssetIdAsync(Guid assetId, CancellationToken cancellationToken = default);
 }

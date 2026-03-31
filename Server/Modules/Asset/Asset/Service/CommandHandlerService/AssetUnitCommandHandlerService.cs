@@ -93,6 +93,10 @@ public class AssetUnitCommandHandlerService(
 
             entity.AssignAsset(asset);
         }
+        else
+        {
+            entity.UnassignAsset();
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

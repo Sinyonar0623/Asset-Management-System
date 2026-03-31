@@ -16,5 +16,4 @@ public sealed class AssignAssetUnitsEventHandler(
 
         await _service.AssignAssetUnit(asset, notification.AssetUnitId, cancellationToken);
     }
-
 }
