@@ -1,20 +1,17 @@
+using Asset.Assets.Events;
 using Asset.Assets.Model;
-using Asset.Data;
 using Asset.Data.Repository.Read;
 using Asset.Data.Repository.Write;
 using Mapster;
-using Shared.Data.UnitOfWork;
 
 namespace Asset.Service.CommandHandlerService;
 
 public class LaboratoryCommandHandlerService(
     ILaboratoryReadRepository laboratoryReadRepository,
-    ILaboratoryWriteRepository laboratoryWriteRepository,
-    IUnitOfWork<AssetDbContext> unitOfWork) : ILaboratoryCommandHandlerService
+    ILaboratoryWriteRepository laboratoryWriteRepository) : ILaboratoryCommandHandlerService
 {
     private readonly ILaboratoryReadRepository _laboratoryReadRepository = laboratoryReadRepository;
     private readonly ILaboratoryWriteRepository _laboratoryWriteRepository = laboratoryWriteRepository;
-    private readonly IUnitOfWork<AssetDbContext> _unitOfWork = unitOfWork;
 
     public async Task<Guid> CreateLaboratory(LaboratoryDto laboratory, CancellationToken cancellationToken = default)
     {
@@ -27,7 +24,6 @@ public class LaboratoryCommandHandlerService(
             laboratory.Description);
 
         await _laboratoryWriteRepository.AddAsync(newLaboratory, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return newLaboratory.Id;
     }
@@ -62,8 +58,6 @@ public class LaboratoryCommandHandlerService(
             laboratory.TeacherId,
             laboratory.Description);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
         return true;
     }
 
@@ -83,8 +77,23 @@ public class LaboratoryCommandHandlerService(
         }
 
         await _laboratoryWriteRepository.DeleteAsync(laboratory, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new DeleteLaboratoryOperationResult(true);
+    }
+
+    public async Task<bool> AssignLaboratory(Guid assetId, Guid labId, CancellationToken cancellationToken = default)
+    {
+        if (assetId == Guid.Empty)
+            throw new ArgumentException("Asset id is required.", nameof(assetId));
+
+        if (labId == Guid.Empty)
+            throw new ArgumentException("Laboratory id is required.", nameof(labId));
+
+        var lab = await _laboratoryWriteRepository.GetByIdAsync(labId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Laboratory with id {labId} was not found.");
+
+        lab.AddDomainEvent(new AssignLaboratoryEvent(assetId, lab));
+
+        return true;
     }
 }

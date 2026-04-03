@@ -1,21 +1,17 @@
 using Asset.Assets.Model;
-using Asset.Data;
 using Asset.Data.Repository.Read;
 using Asset.Data.Repository.Write;
-using Shared.Data.UnitOfWork;
 
 namespace Asset.Service.CommandHandlerService;
 
 public class AssetUnitCommandHandlerService(
     IAssetUnitReadRepository assetUnitReadRepository,
     IAssetUnitWriteRepository assetUnitWriteRepository,
-    IAssetWriteRepository assetWriteRepository,
-    IUnitOfWork<AssetDbContext> unitOfWork) : IAssetUnitCommandHandlerService
+    IAssetWriteRepository assetWriteRepository) : IAssetUnitCommandHandlerService
 {
     private readonly IAssetUnitReadRepository _assetUnitReadRepository = assetUnitReadRepository;
     private readonly IAssetUnitWriteRepository _assetUnitWriteRepository = assetUnitWriteRepository;
     private readonly IAssetWriteRepository _assetWriteRepository = assetWriteRepository;
-    private readonly IUnitOfWork<AssetDbContext> _unitOfWork = unitOfWork;
 
     public async Task<List<Guid>> CreateAssetUnit(List<AssetUnitDto> assetUnits, CancellationToken cancellationToken = default)
     {
@@ -54,8 +50,6 @@ public class AssetUnitCommandHandlerService(
         }
 
         await _assetUnitWriteRepository.AddRangeAsync(newAssetUnits, cancellationToken);
-        
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return [.. newAssetUnits.Select(x => x.Id)];
     }
@@ -98,8 +92,6 @@ public class AssetUnitCommandHandlerService(
             entity.UnassignAsset();
         }
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
         return true;
     }
 
@@ -109,8 +101,6 @@ public class AssetUnitCommandHandlerService(
             ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
 
         await _assetUnitWriteRepository.DeleteAsync(assetUnitId, cancellationToken);
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

@@ -15,6 +15,11 @@ namespace Shared.Data
         {
         }
 
+        public override async Task<T?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+        {
+            return await GetTrackedQuery().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
+        }
+
         // Write operations
         public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {

@@ -6,7 +6,7 @@ public class Laboratory : Aggregate<Guid>
 {
     public string LaboratoryName { get; private set; } = null!;
     public string RoomNo { get; private set; } = null!;
-    public Guid TeacherId { get; private set; }
+    public Guid? TeacherId { get; private set; }
     public string Description { get; private set; } = null!;
 
     private Laboratory() {}
@@ -14,7 +14,7 @@ public class Laboratory : Aggregate<Guid>
     private Laboratory(
         string laboratoryName,
         string roomNo,
-        Guid teacherId,
+        Guid? teacherId,
         string description)
     {
         LaboratoryName = laboratoryName;
@@ -26,7 +26,7 @@ public class Laboratory : Aggregate<Guid>
     public static Laboratory Create(
         string laboratoryName,
         string roomNo,
-        Guid teacherId,
+        Guid? teacherId,
         string description)
     {
         return new Laboratory(laboratoryName, roomNo, teacherId, description);
@@ -35,7 +35,7 @@ public class Laboratory : Aggregate<Guid>
     public void Update(
         string laboratoryName,
         string roomNo,
-        Guid teacherId,
+        Guid? teacherId,
         string description)
     {
         LaboratoryName = laboratoryName;

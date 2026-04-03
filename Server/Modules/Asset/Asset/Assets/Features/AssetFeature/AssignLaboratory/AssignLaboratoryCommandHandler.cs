@@ -2,32 +2,34 @@ using Asset.Data;
 using Asset.Service.CommandHandlerService;
 using Shared.Data.UnitOfWork;
 
-namespace Asset.Assets.Features.AssetUnitFeature.CreateAssetUnit;
+namespace Asset.Assets.Features.AssetFeature.AssignLaboratory;
 
-public class CreateAssetUnitHandler(
+public class AssignLaboratoryCommandHandler(
     IUnitOfWork<AssetDbContext> unitOfWork,
-    IAssetUnitCommandHandlerService service) 
-    : ICommandHandler<CreateAssetUnitCommand, CreateAssetUnitResult>
+    ILaboratoryCommandHandlerService service
+) : ICommandHandler<AssignLaboratoryCommand, AssignLaboratoryResult>
 {
     private readonly IUnitOfWork<AssetDbContext> _unitOfWork = unitOfWork;
-    private readonly IAssetUnitCommandHandlerService _service = service;
-
-    public async Task<CreateAssetUnitResult> Handle(CreateAssetUnitCommand request, CancellationToken cancellationToken)
+    private readonly ILaboratoryCommandHandlerService _service = service;
+    public async Task<AssignLaboratoryResult> Handle(AssignLaboratoryCommand command, CancellationToken cancellationToken)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-            var assetUnits = await _service.CreateAssetUnit(request.AssetUnits, cancellationToken);
+            var isSuccess = await _service.AssignLaboratory(command.AssetId, command.LabId, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-            return new CreateAssetUnitResult(assetUnits);
+            return new AssignLaboratoryResult(isSuccess);
+
         }
         catch
         {
             await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+
             throw;
         }
     }
