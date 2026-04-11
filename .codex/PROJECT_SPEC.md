@@ -1,96 +1,110 @@
-﻿# Computer Engineering Asset Management System (CE-AMS) - Project Spec
+# Computer Engineering Asset Management System (CE-AMS) - Project Spec
+
+Last synced with repository: 2026-04-07
 
 ## Goal
-Build a web application for department asset management with a paperless, role-based workflow:
+Build a paperless department asset management system with:
 - Centralized asset data
-- Request + approval workflow
-- Asset status tracking + audit history
+- Request and approval workflows
+- Asset status tracking and history
 - Notification-ready architecture
 
-## Users and Roles
-- Student: create borrow requests
-- Teacher (lab owner/staff): review student requests, assign specific asset unit(s), approve/reject at teacher step
-- Admin (TA/staff): manage master data, support status updates
-- Head of Department (HOD): final approver for every request
+## Stack (Current)
+- Backend: .NET 10, Carter minimal APIs, MediatR
+- Database: EF Core + PostgreSQL (`Npgsql`)
+- Messaging: MassTransit + RabbitMQ
+- Frontend: Next.js 16 + React 19 (`client`)
+- Local infra: Docker Compose (`postgres` + `rabbitmq`)
 
-## Core Modules (Modular Monolith)
-- Auth: signup/login/logout, JWT auth, roles
-- Assets: asset master, unit-level statuses, history
-- Request: borrow/repair/retire requests, approval flow, tracking
-- Notification: email/alert worker and consumers
-- Shared: CQRS contracts, behaviors (validation/logging), common utilities
+## Architecture
+- Modular monolith under `Server`:
+  - `Application/Api` (composition root)
+  - `Modules/Auth`
+  - `Modules/Asset`
+  - `Modules/Parameter`
+  - `Modules/Request`
+  - `Shared/Shared` and `Shared/Shared.Messaging`
 
-## Approval Policy (Updated Requirement)
-Every request must end with HOD final decision.
+## Current Implementation Snapshot
 
-### Routing Rules
+### Auth Module
+- Implemented endpoints:
+  - `POST /auth/signup/user`
+  - `POST /auth/login`
+  - `POST /auth/logout` (authorized)
+- JWT auth configured in API host.
+- Role seeds exist in Auth migrations:
+  - `00 ADMIN`
+  - `01 DEPTHEAD`
+  - `02 LECTURER`
+  - `03 STUDENT`
+
+### Asset Module
+- CRUD-style endpoints for:
+  - `Laboratory`
+  - `Asset`
+  - `AssetUnit`
+- Data model and migrations are present.
+
+### Parameter Module
+- CRUD-style endpoints for `Parameter` and query by group.
+- Data model and migrations are present.
+
+### Request Module
+- Implemented CRUD-style endpoints for `Request`:
+  - create, get(list), update, delete
+- Aggregate model includes:
+  - request status fields
+  - approval step tracking (`RequestTracking`)
+  - approval flow setup helper (`SetupApprovalFlow`)
+- Approval decision endpoints/workflow orchestration are not completed yet.
+
+### Notification/Integration
+- RabbitMQ + MassTransit wiring is present.
+- Outbox entities were recently removed from current module schemas.
+- Full consumer-driven notification workflow is not completed.
+
+## Security Status (Current vs Target)
+- Current:
+  - Authentication is configured.
+  - Authorization is not enforced globally by fallback policy.
+  - Only selected endpoints (notably `/auth/logout`) enforce authorization.
+  - Rate limiting is not implemented yet.
+  - Health check endpoint is not implemented yet.
+- Target:
+  - Enforce authorization policy by default for business endpoints.
+  - Keep login/signup anonymous only where explicitly required.
+  - Add global and login-specific rate limiting.
+
+## Approval Workflow Requirement (Business Rule)
+Every request must end with final HOD decision.
+
+### Required Routing
 1. Student submits request.
-2. Request goes to assigned lab teacher first.
-3. Lab teacher must assign asset unit(s)/approved quantity, then approve or reject.
-4. If teacher approves, request moves to HOD.
-5. HOD performs final approve/reject.
-6. If HOD rejects, request returns to lab teacher for reconciliation:
+2. Assigned lab teacher reviews first and assigns unit(s)/approved quantity.
+3. Teacher approves or rejects.
+4. If teacher approves, request goes to HOD.
+5. HOD gives final approve/reject.
+6. If HOD rejects, request returns to teacher for reconciliation:
    - close as rejected, or
-   - adjust assignment and resubmit to HOD.
+   - adjust and resubmit to HOD.
 
 ### Special Case
-- If requester is the same teacher responsible for the target lab, teacher step is skipped and request goes directly to HOD.
+- If requester is the same teacher responsible for the target lab, teacher step can be skipped and request goes directly to HOD.
 
-## Workflow State Model (Recommended)
-Use request-level state + per-step tracking.
+## Domain Status Codes In Code
+- Request status:
+  - `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED`
+- Tracking status:
+  - `WAITING`, `PENDING`, `APPROVED`, `REJECTED`, `SKIPPED`, `CANCELLED`
+- Approver roles:
+  - `TEACHER`, `HOD`
 
-### Request Status (top-level)
-- `PENDING`
-- `IN_REVIEW_TEACHER`
-- `IN_REVIEW_HOD`
-- `HOD_REJECTED_RETURNED`
-- `APPROVED`
-- `REJECTED`
-- `CANCELLED`
-- `COMPLETED`
-
-### Tracking Step Status
-- `WAITING`
-- `PENDING`
-- `APPROVED`
-- `REJECTED`
-- `SKIPPED`
-- `CANCELLED`
-
-## Main Workflows
-### Borrow (Student)
-1. Student creates borrow request.
-2. Teacher reviews and assigns specific asset unit(s).
-3. Teacher approves/rejects.
-4. If teacher approves, HOD does final approval.
-5. If HOD approves, asset status changes to borrowed.
-6. If HOD rejects, return to teacher for reconcile-and-resubmit or close rejected.
-
-### Repair (Teacher)
-1. Teacher submits repair request.
-2. HOD final approves/rejects.
-3. If approved, asset status moves to repair flow.
-
-### Retire/Dispose (Teacher or Admin)
-1. Submit retirement request.
-2. HOD final approves/rejects.
-3. If approved, asset status becomes retired and history is recorded.
-
-## Architecture Decision: Saga vs State Machine
-- Do not introduce Saga for core approval routing now.
-- Implement approval logic as a state machine in `Request` aggregate + `RequestTracking` transitions with optimistic concurrency.
-- Consider Saga/Process Manager later only for cross-module asynchronous flows requiring compensation (for example inventory reservation, timeout escalation, external notification guarantees).
-
-## Non-Functional Requirements
-- Web UI: Next.js
-- Backend: .NET 10 + Carter minimal APIs
-- DB: SQL Server (EF Core)
-- Messaging: RabbitMQ + MassTransit
-- Reliability: Outbox pattern for integration events
-- Deploy: Docker Compose (single machine)
-- Security: JWT auth, role-based authorization, rate limiting
+## Architecture Decision (Workflow)
+- Keep approval logic in Request aggregate + step tracking state transitions.
+- Do not introduce Saga/Process Manager unless cross-module async compensation is explicitly needed.
 
 ## Constraints
-- Single developer and limited timeline
-- Keep architecture simple and maintainable
-- Avoid over-engineering unless clear operational need
+- Single-developer, limited timeline.
+- Prefer minimal, maintainable changes.
+- Avoid over-engineering unless there is clear operational benefit.

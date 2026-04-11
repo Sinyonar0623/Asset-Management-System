@@ -12,8 +12,6 @@ public class RequestDbContext(DbContextOptions<RequestDbContext> options) : DbCo
         modelBuilder.HasDefaultSchema("request");
 
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-        modelBuilder.ApplyConfiguration(new OutboxConfiguration(excludeFromMigrations: false));
         modelBuilder.ApplyAuditConventions();        
 
         base.OnModelCreating(modelBuilder);

@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auth.Contracts", "Server\Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Messaging", "Server\Shared\Shared.Messaging\Shared.Messaging.csproj", "{6A0B1F9B-E468-4DCD-A377-18C20FDCBE7A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Request.Contracts", "Server\Modules\Request\Request.Contracts\Request.Contracts.csproj", "{D8A32FC7-13DF-4025-A9E8-070D311C474A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -155,6 +157,18 @@ Global
 		{6A0B1F9B-E468-4DCD-A377-18C20FDCBE7A}.Release|x64.Build.0 = Release|Any CPU
 		{6A0B1F9B-E468-4DCD-A377-18C20FDCBE7A}.Release|x86.ActiveCfg = Release|Any CPU
 		{6A0B1F9B-E468-4DCD-A377-18C20FDCBE7A}.Release|x86.Build.0 = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|x64.Build.0 = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Debug|x86.Build.0 = Debug|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|x64.ActiveCfg = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|x64.Build.0 = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|x86.ActiveCfg = Release|Any CPU
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -176,5 +190,6 @@ Global
 		{BDA7B70C-613C-4F80-93F6-01F6A27C61F7} = {82CA938C-5658-CEA3-5F48-634FCE7E43F3}
 		{489C165D-DB9D-49D4-89EF-57319C77D95F} = {82CA938C-5658-CEA3-5F48-634FCE7E43F3}
 		{6A0B1F9B-E468-4DCD-A377-18C20FDCBE7A} = {8D382B8F-4BB4-F6A7-9E0C-614D62751A58}
+		{D8A32FC7-13DF-4025-A9E8-070D311C474A} = {0D834F3A-B3BC-772F-88BC-BBB4999B45FC}
 	EndGlobalSection
 EndGlobal

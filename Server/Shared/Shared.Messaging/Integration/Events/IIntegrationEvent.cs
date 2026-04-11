@@ -1,6 +1,6 @@
 namespace Shared.Messaging.Integration.Events;
 
-public interface IIntegrationEventEvent
+public interface IIntegration
 {
     Guid EventId => Guid.NewGuid();
     public DateTime OccurredOn => DateTime.UtcNow;

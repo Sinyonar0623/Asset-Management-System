@@ -1,27 +1,41 @@
 # Codex Instructions (Repository Rules)
 
-## Tech
-- .NET 10, Carter Minimal APIs
-- MediatR CQRS + FluentValidation (pipeline behaviors)
-- EF Core + SQL Server
-- RabbitMQ + MassTransit
-- Modular Monolith: Modules/* + Shared/*
+Last synced with repository: 2026-04-07
+
+## Tech And Layout
+- Backend: .NET 10 (`net10.0`) modular monolith in `Server`.
+- API style: Carter minimal APIs (`ICarterModule`) + MediatR.
+- Database: EF Core + PostgreSQL (`Npgsql`), using `ConnectionStrings:Database`.
+- Messaging: MassTransit + RabbitMQ.
+- Frontend: Next.js app in `client` (not `ClientApp`).
+- Main composition root: `Server/Application/Api/Program.cs`.
+- Modules: `Server/Modules/{Auth,Asset,Parameter,Request}` with shared libraries in `Server/Shared`.
 
 ## Coding Rules
-- Do not introduce MVC Controllers unless asked; prefer Carter modules.
-- Keep changes minimal; avoid rewriting project structure.
-- Every public endpoint must be authorized by default; allow anonymous only for /auth/login and health.
-- Add rate limiting policies: global and login-specific.
-- Follow existing folder/module conventions.
-- Add/modify tests only if asked.
+- Prefer Carter modules; do not introduce MVC controllers unless requested.
+- Keep route style consistent with existing endpoints (`/auth/*`, `/Asset`, `/AssetUnit`, `/Laboratory`, `/Parameter`, `/Request`).
+- Keep changes scoped and minimal; preserve module boundaries and folder conventions.
+- Do not change DB provider, messaging stack, or architecture patterns unless explicitly requested.
+- Add or modify tests only when requested.
+
+## Security Reality (Current Code)
+- JWT authentication is configured globally.
+- Authorization is not enforced by default for all endpoints yet.
+- `/auth/logout` currently uses `.RequireAuthorization()`.
+- Global/login rate limiting is not implemented yet.
+- Health check endpoint is not implemented yet.
 
 ## Request Workflow Rules
-- Every request must end with final decision by Head of Department (HOD).
-- Student flow: Student -> Lab Teacher (assign asset unit/approved quantity) -> HOD (final approve/reject).
-- If HOD rejects, request returns to Lab Teacher to either close as rejected or adjust and resubmit.
-- Prefer implementing this as a Request aggregate state machine + tracking transitions.
-- Do not introduce Saga for approval routing unless cross-module async compensation is required.
+- Business requirement remains: every request ends with final HOD decision.
+- Domain currently uses request-level status codes:
+  - `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED`
+- Tracking step status codes:
+  - `WAITING`, `PENDING`, `APPROVED`, `REJECTED`, `SKIPPED`, `CANCELLED`
+- Tracking approver roles:
+  - `TEACHER`, `HOD`
+- Keep approval logic in `Request` aggregate + tracking transitions.
+- Do not introduce Saga unless cross-module async compensation is explicitly required.
 
 ## Output Rules
-- Provide file-by-file changes and explain what was changed.
+- Explain changes file-by-file.
 - Do not change dependencies unless necessary.

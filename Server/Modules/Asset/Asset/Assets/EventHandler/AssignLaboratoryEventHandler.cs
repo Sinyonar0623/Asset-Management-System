@@ -5,7 +5,8 @@ using MediatR;
 namespace Asset.Assets.EventHandler;
 
 public sealed class AssignLaboratoryEventHandler(
-    IAssetWriteRepository assetWriteRepository) : INotificationHandler<AssignLaboratoryEvent>
+    IAssetWriteRepository assetWriteRepository
+) : INotificationHandler<AssignLaboratoryEvent>
 {
     private readonly IAssetWriteRepository _assetWriteRepository = assetWriteRepository;
 

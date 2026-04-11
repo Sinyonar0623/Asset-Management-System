@@ -4,6 +4,8 @@ public class Request : Aggregate<Guid>
 {
     public string RequestNo { get; private set; } = null!;
     public string RequestType { get; private set; } = null!;
+    public Guid TargetLaboratoryId { get; private set; }
+    public string RequestedAssetCategory { get; private set; } = null!;
     public string Status { get; private set; } = null!;
     public Guid RequesterId { get; private set; }
     public string Reason { get; private set; } = null!;
@@ -26,11 +28,15 @@ public class Request : Aggregate<Guid>
     private Request(
         string requestNo,
         string requestType,
+        Guid targetLaboratoryId,
+        string requestedAssetCategory,
         Guid requesterId,
         string reason)
     {
         RequestNo = requestNo;
         RequestType = requestType;
+        TargetLaboratoryId = targetLaboratoryId;
+        RequestedAssetCategory = requestedAssetCategory;
         RequesterId = requesterId;
         Reason = reason;
         Status = RequestStatusCodes.Pending;
@@ -40,14 +46,32 @@ public class Request : Aggregate<Guid>
     public static Request Create(
         string requestNo,
         string requestType,
+        Guid targetLaboratoryId,
+        string requestedAssetCategory,
         Guid requesterId,
         string reason)
     {
         return new Request(
             requestNo,
             requestType,
+            targetLaboratoryId,
+            requestedAssetCategory,
             requesterId,
             reason);
+    }
+
+    public void Update(
+        string requestType,
+        Guid targetLaboratoryId,
+        string requestedAssetCategory,
+        Guid requesterId,
+        string reason)
+    {
+        RequestType = requestType;
+        TargetLaboratoryId = targetLaboratoryId;
+        RequestedAssetCategory = requestedAssetCategory;
+        RequesterId = requesterId;
+        Reason = reason;
     }
 
     public void AddOrIncreaseItem(Guid assetId, int quantityRequested, string? note = null)

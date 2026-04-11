@@ -12,6 +12,7 @@ using Shared.Data.Audit;
 using Shared.Data;
 using Shared.Data.Interceptors;
 using Shared.Extensions;
+using Shared.Messaging.Integration.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ var RequestAssembly = typeof(RequestModule).Assembly;
 
 builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
 builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
+builder.Services.AddMassTransitWithAssemblies(builder.Configuration, assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentActorProvider, HttpContextCurrentActorProvider>();
 builder.Services.AddScoped<ISaveChangesInterceptor, AuditEntityInterceptors>();

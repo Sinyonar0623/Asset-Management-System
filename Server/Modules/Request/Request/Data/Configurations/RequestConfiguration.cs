@@ -14,6 +14,8 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
         builder.HasIndex(x => x.RequestNo).IsUnique();
 
         builder.Property(x => x.RequestType).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.TargetLaboratoryId).IsRequired();
+        builder.Property(x => x.RequestedAssetCategory).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
         builder.Property(x => x.Reason).HasMaxLength(2000).IsRequired();
 
@@ -28,6 +30,8 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
 
         builder.HasIndex(x => new { x.Status, x.NextApproverId });
         builder.HasIndex(x => x.RequesterId);
+        builder.HasIndex(x => x.TargetLaboratoryId);
+        builder.HasIndex(x => new { x.TargetLaboratoryId, x.RequestedAssetCategory });
 
         builder.HasOne(x => x.Detail)
             .WithOne(x => x.Request)
