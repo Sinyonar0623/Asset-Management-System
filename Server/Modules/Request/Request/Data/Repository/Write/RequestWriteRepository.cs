@@ -10,6 +10,16 @@ public class RequestWriteRepository(RequestDbContext dbContext)
 
     public override async Task<Requests.Model.Request?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var tracked = _context.ChangeTracker
+            .Entries<Requests.Model.Request>()
+            .FirstOrDefault(e => e.Entity.Id == id)
+            ?.Entity;
+
+        if (tracked is not null)
+        {
+            return tracked;
+        }
+
         return await _context.Requests
             .Include(x => x.Detail)
             .Include(x => x.Items)

@@ -24,23 +24,25 @@ public class AuthService(
     {
         if (string.IsNullOrWhiteSpace(user.Username)
             || string.IsNullOrWhiteSpace(user.Email)
-            || string.IsNullOrWhiteSpace(user.Password))
+            || string.IsNullOrWhiteSpace(user.Password)
+            || string.IsNullOrWhiteSpace(user.RoleCode))
         {
-            throw new ArgumentException("Username, email and password are required.");
+            throw new ArgumentException("Username, email, password and role code are required.");
         }
 
         var username = user.Username.Trim();
         var email = user.Email.Trim();
-        var roleCode = string.IsNullOrWhiteSpace(user.RoleCode) ? "00" : user.RoleCode.Trim();
+        var roleCode = user.RoleCode.Trim().ToUpperInvariant();
 
         if (await _repository.ExistsByUsernameOrEmailAsync(username, email, cancellationToken))
         {
             throw new InvalidOperationException("Username or email already exists.");
         }
 
-        var role = await _repository.GetRoleByCodeAsync(roleCode, cancellationToken) ?? throw new InvalidOperationException("Role not found.");
+        var role = await _repository.GetRoleByCodeAsync(roleCode, cancellationToken)
+            ?? throw new InvalidOperationException($"Role '{roleCode}' was not found.");
 
-        var newUser = UserName.Create(user.Username, user.Email);
+        var newUser = UserName.Create(username, email);
 
         newUser.SetPasswordHash(_hasher.HashPassword(newUser, user.Password));
 

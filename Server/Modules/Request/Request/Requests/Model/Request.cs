@@ -33,6 +33,7 @@ public class Request : Aggregate<Guid>
         Guid requesterId,
         string reason)
     {
+        Id = Guid.NewGuid();
         RequestNo = requestNo;
         RequestType = requestType;
         TargetLaboratoryId = targetLaboratoryId;
