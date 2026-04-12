@@ -1,5 +1,7 @@
 
 
+using Request.Service.EventHandlerService;
+
 namespace Request;
 
 public static class RequestModule
@@ -9,6 +11,7 @@ public static class RequestModule
         services.AddScoped<IRequestReadRepository, RequestReadRepository>();
         services.AddScoped<IRequestWriteRepository, RequestWriteRepository>();
         services.AddScoped<IRequestCommandHandlerService, RequestCommandHandlerService>();
+        services.AddScoped<IRequestEventHandlerService, RequestEventHandlerService>();
 
         services.AddScoped<IUnitOfWork<RequestDbContext>, UnitOfWork<RequestDbContext>>();
 

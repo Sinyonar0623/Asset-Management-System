@@ -9,5 +9,6 @@ public interface IAuthRepository : IRepository<UserName, Guid>
     Task<UserName?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default);
     Task<UserName?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<UserRole?> GetRoleByCodeAsync(string roleCode, CancellationToken cancellationToken = default);
+    Task<Guid> GetHODId(CancellationToken cancellationToken = default);
 }
 

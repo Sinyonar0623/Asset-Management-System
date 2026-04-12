@@ -63,6 +63,13 @@ public class AuthService(
         return newUser.Id;
     }
 
+    public async Task<Guid> GetHODId(CancellationToken cancellationToken)
+    {
+        var result = await _repository.GetHODId(cancellationToken);
+
+        return result;
+    }
+
     public async Task<LoginAttemptDto> LoginAsync(string email, string password, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))

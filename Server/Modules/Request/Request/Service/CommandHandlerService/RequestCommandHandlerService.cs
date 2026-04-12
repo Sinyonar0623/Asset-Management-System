@@ -1,5 +1,7 @@
+using System.Diagnostics.Tracing;
 using Request.Data.Repository.Read;
 using Request.Data.Repository.Write;
+using Request.Requests.Events;
 using Shared.Pagination;
 
 namespace Request.Service.CommandHandlerService;
@@ -49,6 +51,10 @@ public class RequestCommandHandlerService(
             request.Reason);
 
         ApplyDetail(newRequest, request.Detail);
+
+        var createNewRequestEvent = new CreateNewRequestEvent(newRequest.Id, request.TargetLaboratoryId);
+
+        newRequest.AddDomainEvent(createNewRequestEvent); 
 
         await _requestWriteRepository.AddAsync(newRequest, cancellationToken);
 
