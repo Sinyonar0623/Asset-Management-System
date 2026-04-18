@@ -8,6 +8,8 @@ public interface IAssetCommandHandlerService
     Task<Guid> CreateAsset(AssetDto asset, List<Guid> units, CancellationToken cancellationToken);
     Task<bool> AssignAssetUnits(Assets.Model.Asset asset, List<Guid> units);
     Task<bool> AssignAssetUnitsAsync(Guid assetId, List<Guid> units, CancellationToken cancellationToken);
+    Task<bool> ReserveAssetsAsync(List<Guid> assetIds, CancellationToken cancellationToken);
+    Task<bool> ReleaseAssetsAsync(List<Guid> assetIds, CancellationToken cancellationToken);
     Task<AssetDto> GetAssetById(Guid assetId, CancellationToken cancellationToken);
     Task<bool> UpdateAsset(Guid assetId, AssetDto asset, CancellationToken cancellationToken);
     Task<bool> DeleteAsset(Guid assetId, CancellationToken cancellationToken);

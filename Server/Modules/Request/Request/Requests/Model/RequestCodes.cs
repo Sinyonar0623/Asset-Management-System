@@ -26,8 +26,8 @@ public static class TrackingStatusCodes
     public const string Cancelled = "CANCELLED";
 }
 
-public static class ApproverRoleCodes
+public static class RequestDecisionCodes
 {
-    public const string Teacher = "TEACHER";
-    public const string Hod = "HOD";
+    public const string Approve = "APPROVE";
+    public const string Reject = "REJECT";
 }

@@ -19,7 +19,9 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
         builder.Property(u => u.AvailabilityStatus).HasMaxLength(20).IsRequired();
         builder.Property(u => u.OperationalStatus).HasMaxLength(20).IsRequired();
         builder.Property(u => u.Remark).HasMaxLength(500).IsRequired();
-        builder.Property(u => u.OwnerId).IsRequired(false);
+        builder.Property(u => u.ResponsibleUserId)
+            .HasColumnName("OwnerId")
+            .IsRequired(false);
         builder.HasIndex(u => u.AssetTag).IsUnique();
         builder.HasIndex(u => u.SerialNo).IsUnique();
 
@@ -48,13 +50,18 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
             histories.Property(h => h.ToAvailabilityStatus).HasMaxLength(20).IsRequired(false);
             histories.Property(h => h.FromOperationalStatus).HasMaxLength(20).IsRequired(false);
             histories.Property(h => h.ToOperationalStatus).HasMaxLength(20).IsRequired(false);
-            histories.Property(h => h.FromOwnerId).IsRequired(false);
-            histories.Property(h => h.ToOwnerId).IsRequired(false);
+            histories.Property(h => h.FromResponsibleUserId)
+                .HasColumnName("FromOwnerId")
+                .IsRequired(false);
+            histories.Property(h => h.ToResponsibleUserId)
+                .HasColumnName("ToOwnerId")
+                .IsRequired(false);
             histories.Property(h => h.PerformedBy).IsRequired();
             histories.Property(h => h.PerformedAt).IsRequired();
             histories.Property(h => h.ApprovedBy).IsRequired(false);
             histories.Property(h => h.ApprovedAt).IsRequired(false);
             histories.Property(h => h.ReferenceNo).HasMaxLength(100).IsRequired(false);
+            histories.Property(h => h.RequestId).IsRequired(false);
             histories.Property(h => h.Remark).HasMaxLength(500).IsRequired();
         });
     }

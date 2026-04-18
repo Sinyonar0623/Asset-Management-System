@@ -35,4 +35,26 @@ public class AssetWriteRepository(AssetDbContext dbContext)
 
         assetModel.SetAvailability(isAvailable);
     }
+
+    public async Task<bool> TryReserveAsync(Guid assetId, CancellationToken cancellationToken = default)
+    {
+        var affectedRows = await _context.AssetModels
+            .Where(x => x.Id == assetId && x.IsAvailable)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(x => x.IsAvailable, false),
+                cancellationToken);
+
+        return affectedRows == 1;
+    }
+
+    public async Task<bool> TryReleaseAsync(Guid assetId, CancellationToken cancellationToken = default)
+    {
+        var affectedRows = await _context.AssetModels
+            .Where(x => x.Id == assetId && !x.IsAvailable)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(x => x.IsAvailable, true),
+                cancellationToken);
+
+        return affectedRows == 1;
+    }
 }

@@ -14,7 +14,7 @@ public class CreateRequestCommandHandler(
         {
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-            var requestId = await _service.CreateRequest(request.Request, cancellationToken);
+            var requestId = await _service.CreateRequest(request.Request, request.RequesterId, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

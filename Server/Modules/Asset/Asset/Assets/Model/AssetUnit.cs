@@ -12,7 +12,7 @@ public class AssetUnit : Aggregate<Guid>
     public string AvailabilityStatus { get; private set; } = null!;
     public string OperationalStatus { get; private set; } = null!;
     public string Remark { get; private set; } = null!;
-    public Guid? OwnerId { get; private set; }
+    public Guid? ResponsibleUserId { get; private set; }
 
     public Asset? Asset { get; private set; }
     public AssetUnitCondition? Condition { get; private set; }
@@ -32,14 +32,14 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
         Name = name;
         Brand = brand;
         Remark = remark;
-        OwnerId = ownerId;
+        ResponsibleUserId = responsibleUserId;
         SetStatuses(availabilityStatus, operationalStatus);
     }
 
@@ -51,7 +51,7 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         return new AssetUnit(
             assetTag,
@@ -61,7 +61,7 @@ public class AssetUnit : Aggregate<Guid>
             availabilityStatus,
             operationalStatus,
             remark,
-            ownerId);
+            responsibleUserId);
     }
 
     public void ChangeStatuses(string availabilityStatus, string operationalStatus)
@@ -77,14 +77,14 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
         Name = name;
         Brand = brand;
         Remark = remark;
-        OwnerId = ownerId;
+        ResponsibleUserId = responsibleUserId;
         SetStatuses(availabilityStatus, operationalStatus);
     }
 
@@ -144,11 +144,12 @@ public class AssetUnit : Aggregate<Guid>
         string? toAvailabilityStatus = null,
         string? fromOperationalStatus = null,
         string? toOperationalStatus = null,
-        Guid? fromOwnerId = null,
-        Guid? toOwnerId = null,
+        Guid? fromResponsibleUserId = null,
+        Guid? toResponsibleUserId = null,
         Guid? approvedBy = null,
         DateTime? approvedAt = null,
-        string? referenceNo = null)
+        string? referenceNo = null,
+        Guid? requestId = null)
     {
         _histories.Add(AssetHistory.Create(
             actionType,
@@ -159,11 +160,12 @@ public class AssetUnit : Aggregate<Guid>
             toAvailabilityStatus,
             fromOperationalStatus,
             toOperationalStatus,
-            fromOwnerId,
-            toOwnerId,
+            fromResponsibleUserId,
+            toResponsibleUserId,
             approvedBy,
             approvedAt,
-            referenceNo));
+            referenceNo,
+            requestId));
     }
 
     public void SetCondition(

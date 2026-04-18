@@ -1,11 +1,11 @@
+using Shared.Security;
+
 namespace Request.Requests.Model;
 
 public class Request : Aggregate<Guid>
 {
-    public string RequestNo { get; private set; } = null!;
     public string RequestType { get; private set; } = null!;
     public Guid TargetLaboratoryId { get; private set; }
-    public string RequestedAssetCategory { get; private set; } = null!;
     public string Status { get; private set; } = null!;
     public Guid RequesterId { get; private set; }
     public string Reason { get; private set; } = null!;
@@ -26,18 +26,14 @@ public class Request : Aggregate<Guid>
     private Request() {}
 
     private Request(
-        string requestNo,
         string requestType,
         Guid targetLaboratoryId,
-        string requestedAssetCategory,
         Guid requesterId,
         string reason)
     {
         Id = Guid.NewGuid();
-        RequestNo = requestNo;
         RequestType = requestType;
         TargetLaboratoryId = targetLaboratoryId;
-        RequestedAssetCategory = requestedAssetCategory;
         RequesterId = requesterId;
         Reason = reason;
         Status = RequestStatusCodes.Pending;
@@ -45,18 +41,14 @@ public class Request : Aggregate<Guid>
     }
 
     public static Request Create(
-        string requestNo,
         string requestType,
         Guid targetLaboratoryId,
-        string requestedAssetCategory,
         Guid requesterId,
         string reason)
     {
         return new Request(
-            requestNo,
             requestType,
             targetLaboratoryId,
-            requestedAssetCategory,
             requesterId,
             reason);
     }
@@ -64,36 +56,22 @@ public class Request : Aggregate<Guid>
     public void Update(
         string requestType,
         Guid targetLaboratoryId,
-        string requestedAssetCategory,
-        Guid requesterId,
         string reason)
     {
         RequestType = requestType;
         TargetLaboratoryId = targetLaboratoryId;
-        RequestedAssetCategory = requestedAssetCategory;
-        RequesterId = requesterId;
         Reason = reason;
     }
 
-    public void AddOrIncreaseItem(Guid assetId, int quantityRequested, string? note = null)
+    public void AddItem(Guid assetId)
     {
         var existing = _items.FirstOrDefault(x => x.AssetId == assetId);
-        if (existing is null)
+        if (existing is not null)
         {
-            _items.Add(RequestItem.Create(assetId, quantityRequested, note));
             return;
         }
 
-        existing.IncreaseQuantity(quantityRequested);
-        existing.UpdateNote(note);
-    }
-
-    public void ChangeItemQuantity(Guid assetId, int quantityRequested)
-    {
-        var existing = _items.FirstOrDefault(x => x.AssetId == assetId)
-            ?? throw new InvalidOperationException("Request item not found.");
-
-        existing.ChangeQuantity(quantityRequested);
+        _items.Add(RequestItem.Create(assetId));
     }
 
     public void RemoveItem(Guid assetId)
@@ -141,11 +119,11 @@ public class Request : Aggregate<Guid>
 
         if (requesterIsTeacherOfTargetLab && teacherApproverId.HasValue)
         {
-            var teacherStep = RequestTracking.Create(1, ApproverRoleCodes.Teacher, teacherApproverId);
+            var teacherStep = RequestTracking.Create(1, RoleCodes.Teacher, teacherApproverId);
             teacherStep.Skip("Requester is the laboratory teacher.");
             _trackings.Add(teacherStep);
 
-            var hodStep = RequestTracking.Create(2, ApproverRoleCodes.Hod, hodApproverId);
+            var hodStep = RequestTracking.Create(2, RoleCodes.Hod, hodApproverId);
             hodStep.Activate();
             _trackings.Add(hodStep);
 
@@ -156,18 +134,18 @@ public class Request : Aggregate<Guid>
 
         if (teacherApproverId.HasValue)
         {
-            var teacherStep = RequestTracking.Create(1, ApproverRoleCodes.Teacher, teacherApproverId);
+            var teacherStep = RequestTracking.Create(1, RoleCodes.Teacher, teacherApproverId);
             teacherStep.Activate();
             _trackings.Add(teacherStep);
 
-            _trackings.Add(RequestTracking.Create(2, ApproverRoleCodes.Hod, hodApproverId));
+            _trackings.Add(RequestTracking.Create(2, RoleCodes.Hod, hodApproverId));
 
             CurrentStepNo = 1;
             NextApproverId = teacherApproverId;
             return;
         }
 
-        var onlyHodStep = RequestTracking.Create(1, ApproverRoleCodes.Hod, hodApproverId);
+        var onlyHodStep = RequestTracking.Create(1, RoleCodes.Hod, hodApproverId);
         onlyHodStep.Activate();
         _trackings.Add(onlyHodStep);
 

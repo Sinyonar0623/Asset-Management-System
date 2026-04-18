@@ -37,6 +37,73 @@ public class AssetCommandHandlerService(
         return true;
     }
 
+    public async Task<bool> ReserveAssetsAsync(List<Guid> assetIds, CancellationToken cancellationToken)
+    {
+        if (assetIds is null || assetIds.Count == 0)
+        {
+            throw new ArgumentException("At least one asset id is required.", nameof(assetIds));
+        }
+
+        var distinctAssetIds = assetIds
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        if (distinctAssetIds.Count == 0)
+        {
+            throw new ArgumentException("At least one valid asset id is required.", nameof(assetIds));
+        }
+
+        foreach (var assetId in distinctAssetIds)
+        {
+            var isReserved = await _assetWriteRepository.TryReserveAsync(assetId, cancellationToken);
+            if (isReserved)
+            {
+                continue;
+            }
+
+            var asset = await _assetWriteRepository.GetByIdAsync(assetId, cancellationToken);
+            if (asset is null)
+            {
+                throw new KeyNotFoundException($"Asset with id {assetId} was not found.");
+            }
+
+            throw new InvalidOperationException($"Asset with id {assetId} is not available for reservation.");
+        }
+
+        return true;
+    }
+
+    public async Task<bool> ReleaseAssetsAsync(List<Guid> assetIds, CancellationToken cancellationToken)
+    {
+        if (assetIds is null || assetIds.Count == 0)
+        {
+            return true;
+        }
+
+        var distinctAssetIds = assetIds
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        foreach (var assetId in distinctAssetIds)
+        {
+            var isReleased = await _assetWriteRepository.TryReleaseAsync(assetId, cancellationToken);
+            if (isReleased)
+            {
+                continue;
+            }
+
+            var asset = await _assetWriteRepository.GetByIdAsync(assetId, cancellationToken);
+            if (asset is null)
+            {
+                throw new KeyNotFoundException($"Asset with id {assetId} was not found.");
+            }
+        }
+
+        return true;
+    }
+
     public async Task<Guid> CreateAsset(AssetDto asset, List<Guid> units, CancellationToken cancellationToken)
     {
         var newAsset = Assets.Model.Asset.Create(

@@ -50,7 +50,14 @@ public static class AssetUnitStatuses
 
     public static bool IsReadyForAssignAsset(string availabilityStatus, string operationalStatus)
     {
-        return availabilityStatus == Availability.Available
-            && operationalStatus == Operational.Ready;
+        return operationalStatus == Operational.Ready
+               && (availabilityStatus == Availability.Available
+                   || availabilityStatus == Availability.PendingActivation);
+    }
+
+    public static bool IsPendingActivationReady(string availabilityStatus, string operationalStatus)
+    {
+        return availabilityStatus == Availability.PendingActivation
+               && operationalStatus == Operational.Ready;
     }
 }

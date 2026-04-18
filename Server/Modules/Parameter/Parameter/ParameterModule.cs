@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Parameter.Data;
 using Parameter.Data.Repository;
+using Parameter.Data.Seed;
+using Shared.Data;
 using Shared.Data.Extensions;
 using Shared.Data.UnitOfWork;
 
@@ -18,6 +20,7 @@ public static class ParameterModule
 
         service.AddScoped<IParameterRepository, ParameterRepository>();
         service.AddScoped<IUnitOfWork<ParameterDbContext>, UnitOfWork<ParameterDbContext>>();
+        service.AddScoped<IDataSeeder<ParameterDbContext>, ParameterDataSeed>();
 
         service.AddDbContext<ParameterDbContext>((sp, options) =>
         {
@@ -36,6 +39,16 @@ public static class ParameterModule
     public static IApplicationBuilder UseParameterModule(this IApplicationBuilder app)
     {
         app.UseMigration<ParameterDbContext>();
+        SeedParameterDataAsync(app.ApplicationServices).GetAwaiter().GetResult();
+
         return app;
+    }
+
+    private static async Task SeedParameterDataAsync(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+
+        var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder<ParameterDbContext>>();
+        await seeder.SeedAllAsync();
     }
 }

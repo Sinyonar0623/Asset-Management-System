@@ -1,9 +1,7 @@
-using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
 using Auth.Authentication.Model;
-using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data;
+using Shared.Security;
 
 namespace Auth.Data.Repository;
 
@@ -36,7 +34,7 @@ public class AuthRepository(AuthDbContext dbContext) : BaseRepository<UserName, 
         var hodUserId = await _context.UserName
             .AsNoTracking()
             .Include(x => x.Role)
-            .Where(x => x.Role.RoleCode == "01")
+            .Where(x => x.Role.RoleCode == RoleCodes.Hod)
             .Select(x => x.Id)
             .FirstOrDefaultAsync(cancellationToken);
 

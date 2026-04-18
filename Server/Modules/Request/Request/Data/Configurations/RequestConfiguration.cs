@@ -10,12 +10,8 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd();
 
-        builder.Property(x => x.RequestNo).HasMaxLength(30).IsRequired();
-        builder.HasIndex(x => x.RequestNo).IsUnique();
-
         builder.Property(x => x.RequestType).HasMaxLength(20).IsRequired();
         builder.Property(x => x.TargetLaboratoryId).IsRequired();
-        builder.Property(x => x.RequestedAssetCategory).HasMaxLength(50).IsRequired();
         builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
         builder.Property(x => x.Reason).HasMaxLength(2000).IsRequired();
 
@@ -31,7 +27,6 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
         builder.HasIndex(x => new { x.Status, x.NextApproverId });
         builder.HasIndex(x => x.RequesterId);
         builder.HasIndex(x => x.TargetLaboratoryId);
-        builder.HasIndex(x => new { x.TargetLaboratoryId, x.RequestedAssetCategory });
 
         builder.HasOne(x => x.Detail)
             .WithOne(x => x.Request)
@@ -48,9 +43,12 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
             item.HasKey("Id");
 
             item.Property(x => x.AssetId).IsRequired();
-            item.Property(x => x.QuantityRequested).IsRequired();
-            item.Property(x => x.QuantityApproved).IsRequired(false);
-            item.Property(x => x.Note).HasMaxLength(1000).IsRequired(false);
+            item.Property(x => x.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+            item.Property(x => x.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
 
             item.HasIndex("RequestId", nameof(RequestItem.AssetId)).IsUnique();
             item.HasIndex(nameof(RequestItem.AssetId));

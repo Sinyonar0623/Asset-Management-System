@@ -36,6 +36,9 @@ public class RequestTracking
     public void Activate()
     {
         Status = TrackingStatusCodes.Pending;
+        ActionByUserId = null;
+        ActionOn = null;
+        Comment = null;
         IsCurrent = true;
     }
 

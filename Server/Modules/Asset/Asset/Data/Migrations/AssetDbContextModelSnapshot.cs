@@ -119,13 +119,14 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid?>("OwnerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Remark")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("ResponsibleUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("OwnerId");
 
                     b.Property<string>("SerialNo")
                         .IsRequired()
@@ -415,8 +416,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
 
-                            b1.Property<Guid?>("FromOwnerId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid?>("FromResponsibleUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("FromOwnerId");
 
                             b1.Property<DateTime>("PerformedAt")
                                 .HasColumnType("timestamp with time zone");
@@ -433,6 +435,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(500)
                                 .HasColumnType("character varying(500)");
 
+                            b1.Property<Guid?>("RequestId")
+                                .HasColumnType("uuid");
+
                             b1.Property<string>("ToAvailabilityStatus")
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
@@ -441,8 +446,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
 
-                            b1.Property<Guid?>("ToOwnerId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid?>("ToResponsibleUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("ToOwnerId");
 
                             b1.HasKey("AssetUnitId", "Id");
 

@@ -37,6 +37,13 @@ public class AssetUnitEventHandlerService(
             if (!AssetUnitStatuses.IsReadyForAssignAsset(unit.AvailabilityStatus, unit.OperationalStatus))
                 throw new KeyNotFoundException($"Asset unit with id was conflict.");
 
+            if (AssetUnitStatuses.IsPendingActivationReady(unit.AvailabilityStatus, unit.OperationalStatus))
+            {
+                unit.ChangeStatuses(
+                    AssetUnitStatuses.Availability.Available,
+                    AssetUnitStatuses.Operational.Ready);
+            }
+
             unit.AssignAsset(asset);
         }
 

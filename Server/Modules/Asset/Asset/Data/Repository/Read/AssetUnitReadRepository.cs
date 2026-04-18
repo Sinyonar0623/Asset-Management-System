@@ -27,7 +27,7 @@ public class AssetUnitReadRepository(AssetDbContext dbContext)
                 AvailabilityStatus = x.AvailabilityStatus,
                 OperationalStatus = x.OperationalStatus,
                 Remark = x.Remark,
-                OwnerId = x.OwnerId
+                ResponsibleUserId = x.ResponsibleUserId
             })
             .ToListAsync(cancellationToken);
     }
@@ -50,7 +50,7 @@ public class AssetUnitReadRepository(AssetDbContext dbContext)
                 AvailabilityStatus = x.AvailabilityStatus,
                 OperationalStatus = x.OperationalStatus,
                 Remark = x.Remark,
-                OwnerId = x.OwnerId
+                ResponsibleUserId = x.ResponsibleUserId
             })
             .FirstOrDefaultAsync(cancellationToken);
     }

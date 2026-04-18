@@ -1,26 +1,27 @@
-using System.Diagnostics.Tracing;
+using MassTransit;
 using Request.Data.Repository.Read;
 using Request.Data.Repository.Write;
-using Request.Requests.Events;
 using Shared.Pagination;
+using Shared.Security;
+using Shared.Messaging.Integration.Command;
+using Shared.Messaging.Integration.Response;
 
 namespace Request.Service.CommandHandlerService;
 
 public class RequestCommandHandlerService(
     IRequestReadRepository requestReadRepository,
-    IRequestWriteRepository requestWriteRepository) : IRequestCommandHandlerService
+    IRequestWriteRepository requestWriteRepository,
+    IRequestClient<ReserveAssetCommand> reserveAssetClient,
+    IRequestClient<ReleaseAssetCommand> releaseAssetClient) : IRequestCommandHandlerService
 {
     private readonly IRequestReadRepository _requestReadRepository = requestReadRepository;
     private readonly IRequestWriteRepository _requestWriteRepository = requestWriteRepository;
+    private readonly IRequestClient<ReserveAssetCommand> _reserveAssetClient = reserveAssetClient;
+    private readonly IRequestClient<ReleaseAssetCommand> _releaseAssetClient = releaseAssetClient;
 
-    public async Task<Guid> CreateRequest(CreateRequestDto request, CancellationToken cancellationToken)
+    public async Task<Guid> CreateRequest(CreateRequestDto request, Guid requesterId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-
-        if (string.IsNullOrWhiteSpace(request.RequestNo))
-        {
-            throw new ArgumentException("RequestNo is required.", nameof(request));
-        }
 
         if (string.IsNullOrWhiteSpace(request.RequestType))
         {
@@ -32,9 +33,9 @@ public class RequestCommandHandlerService(
             throw new ArgumentException("TargetLaboratoryId is required.", nameof(request));
         }
 
-        if (string.IsNullOrWhiteSpace(request.RequestedAssetCategory))
+        if (requesterId == Guid.Empty)
         {
-            throw new ArgumentException("RequestedAssetCategory is required.", nameof(request));
+            throw new ArgumentException("RequesterId is required.", nameof(requesterId));
         }
 
         if (string.IsNullOrWhiteSpace(request.Reason))
@@ -43,16 +44,14 @@ public class RequestCommandHandlerService(
         }
 
         var newRequest = Requests.Model.Request.Create(
-            request.RequestNo,
             request.RequestType,
             request.TargetLaboratoryId,
-            request.RequestedAssetCategory,
-            request.RequesterId,
+            requesterId,
             request.Reason);
 
         ApplyDetail(newRequest, request.Detail);
 
-        var createNewRequestEvent = new CreateNewRequestEvent(newRequest.Id, request.TargetLaboratoryId);
+        var createNewRequestEvent = new Requests.Events.CreateNewRequestEvent(newRequest.Id, request.TargetLaboratoryId);
 
         newRequest.AddDomainEvent(createNewRequestEvent); 
 
@@ -109,11 +108,6 @@ public class RequestCommandHandlerService(
             throw new ArgumentException("TargetLaboratoryId is required.", nameof(request));
         }
 
-        if (string.IsNullOrWhiteSpace(request.RequestedAssetCategory))
-        {
-            throw new ArgumentException("RequestedAssetCategory is required.", nameof(request));
-        }
-
         if (string.IsNullOrWhiteSpace(request.Reason))
         {
             throw new ArgumentException("Reason is required.", nameof(request));
@@ -122,8 +116,6 @@ public class RequestCommandHandlerService(
         currentRequest.Update(
             request.RequestType,
             request.TargetLaboratoryId,
-            request.RequestedAssetCategory,
-            request.RequesterId,
             request.Reason);
 
         if (request.Detail is not null)
@@ -151,10 +143,7 @@ public class RequestCommandHandlerService(
 
     private static void ApplyDetail(Requests.Model.Request request, RequestDetailDto? detail)
     {
-        if (detail is null)
-        {
-            return;
-        }
+        if (detail is null) return;
 
         request.SetOrUpdateDetail(
             detail.Purpose,
@@ -167,7 +156,18 @@ public class RequestCommandHandlerService(
 
     private static void SyncItems(Requests.Model.Request request, IReadOnlyCollection<RequestItemDto> items)
     {
-        var incomingAssetIds = items.Select(x => x.AssetId).ToHashSet();
+        var incomingAssetIds = items
+            .Where(x => x.AssetId != Guid.Empty)
+            .Select(x => x.AssetId)
+            .ToHashSet();
+        SyncItems(request, incomingAssetIds);
+    }
+
+    private static void SyncItems(Requests.Model.Request request, IReadOnlyCollection<Guid> assetIds)
+    {
+        var incomingAssetIds = assetIds
+            .Where(x => x != Guid.Empty)
+            .ToHashSet();
         var existingAssetIds = request.Items.Select(x => x.AssetId).ToList();
 
         foreach (var existingAssetId in existingAssetIds.Where(x => !incomingAssetIds.Contains(x)))
@@ -175,24 +175,9 @@ public class RequestCommandHandlerService(
             request.RemoveItem(existingAssetId);
         }
 
-        foreach (var item in items)
+        foreach (var assetId in incomingAssetIds)
         {
-            var existingItem = request.Items.FirstOrDefault(x => x.AssetId == item.AssetId);
-            if (existingItem is null)
-            {
-                request.AddOrIncreaseItem(item.AssetId, item.QuantityRequested, item.Note);
-                existingItem = request.Items.First(x => x.AssetId == item.AssetId);
-            }
-            else
-            {
-                existingItem.ChangeQuantity(item.QuantityRequested);
-                existingItem.UpdateNote(item.Note);
-            }
-
-            if (item.QuantityApproved.HasValue)
-            {
-                existingItem.SetApprovalQuantity(item.QuantityApproved.Value);
-            }
+            request.AddItem(assetId);
         }
     }
 
@@ -201,10 +186,8 @@ public class RequestCommandHandlerService(
         return new RequestDto
         {
             Id = request.Id,
-            RequestNo = request.RequestNo,
             RequestType = request.RequestType,
             TargetLaboratoryId = request.TargetLaboratoryId,
-            RequestedAssetCategory = request.RequestedAssetCategory,
             Status = request.Status,
             RequesterId = request.RequesterId,
             Reason = request.Reason,
@@ -226,9 +209,8 @@ public class RequestCommandHandlerService(
             Items = request.Items.Select(item => new RequestItemDto
             {
                 AssetId = item.AssetId,
-                QuantityRequested = item.QuantityRequested,
-                QuantityApproved = item.QuantityApproved,
-                Note = item.Note
+                CreatedAt = item.CreatedAt,
+                UpdatedAt = item.UpdatedAt
             }).ToList(),
             Trackings = request.Trackings.Select(tracking => new RequestTrackingDto
             {
@@ -243,4 +225,152 @@ public class RequestCommandHandlerService(
             }).OrderBy(x => x.StepNo).ToList()
         };
     }
+
+    public async Task<bool> MarkRequestProcessed(
+        Guid requestId,
+        Guid approverId,
+        string approverRoleCode,
+        string decision,
+        string? comment,
+        List<Guid> assetIds,
+        CancellationToken cancellationToken)
+    {
+        var request = await _requestWriteRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Request with id {requestId} was not found.");
+
+        if (!string.Equals(request.Status, RequestStatusCodes.Pending, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"Request with id {requestId} is not in pending status.");
+        }
+
+        if (!request.CurrentStepNo.HasValue)
+        {
+            throw new InvalidOperationException($"Request with id {requestId} has no active approval step.");
+        }
+
+        var currentStep = request.Trackings
+            .FirstOrDefault(x => x.StepNo == request.CurrentStepNo.Value)
+            ?? throw new InvalidOperationException($"Current tracking step {request.CurrentStepNo.Value} was not found.");
+
+        if (currentStep.AssignedApproverId.HasValue && currentStep.AssignedApproverId.Value != approverId)
+        {
+            throw new UnauthorizedAccessException("You are not the assigned approver for this step.");
+        }
+
+        if (!string.Equals(currentStep.RequiredRoleCode, approverRoleCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException("Your role is not allowed to process this step.");
+        }
+
+        if (string.Equals(decision, RequestDecisionCodes.Reject, StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(currentStep.RequiredRoleCode, RoleCodes.Hod, StringComparison.OrdinalIgnoreCase))
+            {
+                var previousStep = request.Trackings
+                    .Where(x => x.StepNo < currentStep.StepNo)
+                    .OrderByDescending(x => x.StepNo)
+                    .FirstOrDefault();
+
+                if (previousStep is not null)
+                {
+                    var reservedAssetIds = request.Items
+                        .Select(x => x.AssetId)
+                        .Where(x => x != Guid.Empty)
+                        .Distinct()
+                        .ToList();
+
+                    if (reservedAssetIds.Count > 0)
+                    {
+                        await ReleaseAssetsFromRequest(requestId, approverId, reservedAssetIds, cancellationToken);
+                    }
+
+                    currentStep.Reject(approverId, comment);
+                    request.ActivateStep(previousStep.StepNo, previousStep.AssignedApproverId);
+                    return true;
+                }
+            }
+
+            currentStep.Reject(approverId, comment);
+            request.MarkRejected();
+            return true;
+        }
+
+        if (!string.Equals(decision, RequestDecisionCodes.Approve, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Decision must be either APPROVE or REJECT.", nameof(decision));
+        }
+
+        var normalizedAssetIds = assetIds
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToList();
+
+        if (string.Equals(currentStep.RequiredRoleCode, RoleCodes.Teacher, StringComparison.OrdinalIgnoreCase))
+        {
+            if (normalizedAssetIds.Count == 0)
+            {
+                throw new ArgumentException("Teacher approval requires at least one asset id.", nameof(assetIds));
+            }
+
+            await ReserveAssetsFromRequest(requestId, approverId, normalizedAssetIds, cancellationToken);
+            SyncItems(request, normalizedAssetIds);
+        }
+        else if (normalizedAssetIds.Count > 0)
+        {
+            throw new InvalidOperationException("Asset reservation is only allowed during the teacher approval step.");
+        }
+
+        currentStep.Approve(approverId, comment);
+
+        var nextStep = request.Trackings
+            .Where(x => x.StepNo > currentStep.StepNo)
+            .OrderBy(x => x.StepNo)
+            .FirstOrDefault();
+
+        if (nextStep is null)
+        {
+            request.MarkApproved();
+            return true;
+        }
+
+        request.ActivateStep(nextStep.StepNo, nextStep.AssignedApproverId);
+
+        return true;
+    }
+
+    public async Task<bool> MarkRequestApproved(Guid requestId, CancellationToken cancellationToken)
+    {
+        var request = await _requestWriteRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Request with id {requestId} was not found.");
+
+        request.MarkApproved();
+
+        return true;
+    }
+
+    public async Task<bool> ReserveAssetsFromRequest(Guid requestId, Guid approverId, List<Guid> assetIds, CancellationToken cancellationToken)
+    {
+        var request = await _requestReadRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Request with id {requestId} was not found.");
+
+        var response = await _reserveAssetClient.GetResponse<ReserveAssetCommandResponse>(
+            new ReserveAssetCommand(request.Id, approverId, assetIds),
+            cancellationToken);
+
+        return response.Message.IsSuccess;
+    }
+
+    public async Task<bool> ReleaseAssetsFromRequest(Guid requestId, Guid approverId, List<Guid> assetIds, CancellationToken cancellationToken)
+    {
+        var request = await _requestReadRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Request with id {requestId} was not found.");
+
+        var response = await _releaseAssetClient.GetResponse<ReleaseAssetCommandResponse>(
+            new ReleaseAssetCommand(request.Id, approverId, assetIds),
+            cancellationToken);
+
+        return response.Message.IsSuccess;
+    }
+
+
 }

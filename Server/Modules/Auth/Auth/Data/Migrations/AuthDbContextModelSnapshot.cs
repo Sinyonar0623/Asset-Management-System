@@ -121,7 +121,7 @@ namespace Auth.Data.Migrations
                         {
                             Id = new Guid("1b4dc80d-c3e8-4e6d-a9d6-2bbd478d2d00"),
                             CreateBy = "SYSTEM",
-                            RoleCode = "00",
+                            RoleCode = "ADMIN",
                             RoleDescription = "System administrator",
                             RoleName = "ADMIN"
                         },
@@ -129,23 +129,23 @@ namespace Auth.Data.Migrations
                         {
                             Id = new Guid("b89541a9-8ce6-4e95-820d-7c7785f96f01"),
                             CreateBy = "SYSTEM",
-                            RoleCode = "01",
+                            RoleCode = "HOD",
                             RoleDescription = "Department head",
-                            RoleName = "DEPTHEAD"
+                            RoleName = "HOD"
                         },
                         new
                         {
                             Id = new Guid("52400f2b-0eaf-4921-9ad7-e527fb52bb02"),
                             CreateBy = "SYSTEM",
-                            RoleCode = "02",
+                            RoleCode = "TEACHER",
                             RoleDescription = "Lecturer",
-                            RoleName = "LECTURER"
+                            RoleName = "TEACHER"
                         },
                         new
                         {
                             Id = new Guid("f801e95d-340b-4f34-8a6a-9deac4168003"),
                             CreateBy = "SYSTEM",
-                            RoleCode = "03",
+                            RoleCode = "STUDENT",
                             RoleDescription = "Student",
                             RoleName = "STUDENT"
                         });

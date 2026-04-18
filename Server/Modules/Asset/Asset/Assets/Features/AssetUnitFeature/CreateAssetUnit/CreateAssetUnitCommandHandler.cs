@@ -21,6 +21,7 @@ public class CreateAssetUnitHandler(
             var assetUnits = await _service.CreateAssetUnit(request.AssetUnits, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
             return new CreateAssetUnitResult(assetUnits);

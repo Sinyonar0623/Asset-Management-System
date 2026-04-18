@@ -35,7 +35,7 @@ public class AssetUnitCommandHandlerService(
                     ? AssetUnitStatuses.Operational.Ready
                     : unit.OperationalStatus,
                 unit.Remark,
-                unit.OwnerId
+                unit.ResponsibleUserId
             );
 
             if (unit.AssetId.HasValue && unit.AssetId.Value != Guid.Empty)
@@ -78,7 +78,7 @@ public class AssetUnitCommandHandlerService(
             assetUnit.AvailabilityStatus,
             assetUnit.OperationalStatus,
             assetUnit.Remark,
-            assetUnit.OwnerId);
+            assetUnit.ResponsibleUserId);
 
         if (assetUnit.AssetId.HasValue && assetUnit.AssetId.Value != Guid.Empty)
         {

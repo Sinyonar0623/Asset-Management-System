@@ -54,20 +54,10 @@ namespace Request.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<string>("RequestNo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
                     b.Property<string>("RequestType")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<string>("RequestedAssetCategory")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("RequesterId")
                         .HasColumnType("uuid");
@@ -97,16 +87,11 @@ namespace Request.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RequestNo")
-                        .IsUnique();
-
                     b.HasIndex("RequesterId");
 
                     b.HasIndex("TargetLaboratoryId");
 
                     b.HasIndex("Status", "NextApproverId");
-
-                    b.HasIndex("TargetLaboratoryId", "RequestedAssetCategory");
 
                     b.ToTable("Requests", "request");
                 });
@@ -182,18 +167,18 @@ namespace Request.Data.Migrations
                             b1.Property<Guid>("AssetId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Note")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)");
-
-                            b1.Property<int?>("QuantityApproved")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("QuantityRequested")
-                                .HasColumnType("integer");
+                            b1.Property<DateTime>("CreatedAt")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                             b1.Property<Guid>("RequestId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("UpdatedAt")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                             b1.HasKey("Id");
 
