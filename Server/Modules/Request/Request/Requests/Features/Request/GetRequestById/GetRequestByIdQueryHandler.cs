@@ -9,7 +9,12 @@ public class GetRequestByIdQueryHandler(IRequestCommandHandlerService service)
 
     public async Task<GetRequestByIdResult> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
     {
-        var requestById = await _service.GetRequestById(request.Id, cancellationToken);
+        var requestById = await _service.GetVisibleRequestById(
+            request.Id,
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetRequestByIdResult(requestById);
     }
 }

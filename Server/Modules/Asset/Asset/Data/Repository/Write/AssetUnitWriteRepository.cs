@@ -26,6 +26,15 @@ public class AssetUnitWriteRepository(AssetDbContext dbContext)
             .FirstOrDefaultAsync(x => x.Id == assetUnitId, cancellationToken);
     }
 
+    public async Task<AssetUnit?> GetByIdWithImagesAsync(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.AssetUnits
+            .Include(x => x.Images)
+            .FirstOrDefaultAsync(x => x.Id == assetUnitId, cancellationToken);
+    }
+
     public async Task<bool> AssetTagExistsAsync(
         string assetTag,
         Guid? excludeAssetUnitId = null,
@@ -68,6 +77,7 @@ public class AssetUnitWriteRepository(AssetDbContext dbContext)
         return await _context.AssetUnits
             .Where(x => assetUnitIds.Contains(x.Id))
             .Include(x => x.Asset)
+            .Include(x => x.Histories)
             .ToListAsync(cancellationToken);
     }
 

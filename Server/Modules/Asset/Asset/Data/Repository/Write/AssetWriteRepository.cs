@@ -36,25 +36,107 @@ public class AssetWriteRepository(AssetDbContext dbContext)
         assetModel.SetAvailability(isAvailable);
     }
 
-    public async Task<bool> TryReserveAsync(Guid assetId, CancellationToken cancellationToken = default)
+    public async Task<bool> TryReserveAsync(
+        Guid assetId,
+        Guid performedBy,
+        Guid? requestId = null,
+        CancellationToken cancellationToken = default)
     {
-        var affectedRows = await _context.AssetModels
-            .Where(x => x.Id == assetId && x.IsAvailable)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(x => x.IsAvailable, false),
-                cancellationToken);
+        var asset = await _context.AssetModels
+            .FirstOrDefaultAsync(x => x.Id == assetId, cancellationToken);
 
-        return affectedRows == 1;
+        if (asset is null || !asset.IsAvailable)
+        {
+            return false;
+        }
+
+        var assetUnits = await _context.AssetUnits
+            .Include(x => x.Histories)
+            .Where(x => EF.Property<Guid?>(x, "AssetId") == assetId
+                        && x.AvailabilityStatus == AssetUnitStatuses.Availability.Available
+                        && x.OperationalStatus == AssetUnitStatuses.Operational.Ready)
+            .ToListAsync(cancellationToken);
+
+        if (assetUnits.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var assetUnit in assetUnits)
+        {
+            assetUnit.Reserve(performedBy, requestId);
+        }
+
+        asset.SetAvailability(false);
+
+        return true;
     }
 
-    public async Task<bool> TryReleaseAsync(Guid assetId, CancellationToken cancellationToken = default)
+    public async Task<bool> TryMarkInUseAsync(
+        Guid assetId,
+        Guid responsibleUserId,
+        Guid performedBy,
+        Guid? requestId = null,
+        CancellationToken cancellationToken = default)
     {
-        var affectedRows = await _context.AssetModels
-            .Where(x => x.Id == assetId && !x.IsAvailable)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(x => x.IsAvailable, true),
-                cancellationToken);
+        var asset = await _context.AssetModels
+            .FirstOrDefaultAsync(x => x.Id == assetId, cancellationToken);
 
-        return affectedRows == 1;
+        var assetUnits = await _context.AssetUnits
+            .Include(x => x.Histories)
+            .Where(x => EF.Property<Guid?>(x, "AssetId") == assetId)
+            .ToListAsync(cancellationToken);
+
+        if (asset is null || assetUnits.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var assetUnit in assetUnits)
+        {
+            assetUnit.MarkInUse(responsibleUserId, performedBy, requestId);
+        }
+
+        asset?.SetAvailability(false);
+
+        return true;
+    }
+
+    public async Task<bool> TryReleaseAsync(
+        Guid assetId,
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null,
+        string actionType = "RELEASE",
+        CancellationToken cancellationToken = default)
+    {
+        var asset = await _context.AssetModels
+            .FirstOrDefaultAsync(x => x.Id == assetId, cancellationToken);
+
+        var assetUnits = await _context.AssetUnits
+            .Include(x => x.Histories)
+            .Where(x => EF.Property<Guid?>(x, "AssetId") == assetId)
+            .ToListAsync(cancellationToken);
+
+        if (asset is null || assetUnits.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var assetUnit in assetUnits)
+        {
+            if (assetUnit.AvailabilityStatus == AssetUnitStatuses.Availability.Available
+                && assetUnit.OperationalStatus == AssetUnitStatuses.Operational.Ready
+                && assetUnit.ResponsibleUserId is null)
+            {
+                continue;
+            }
+
+            assetUnit.Release(performedBy, requestId, remark, actionType);
+        }
+
+        asset?.SetAvailability(true);
+
+        return true;
     }
 }

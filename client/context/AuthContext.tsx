@@ -26,6 +26,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getHomePath(role: AuthSession["role"]) {
+  return role === "student" ? "/assetManagement/requests" : "/assetManagement/dashboard"
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setLoading] = useState(true);
@@ -106,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
         setSessionCookie(newSession.expiresAt);
         setSession(newSession);
-        router.push("/assetManagement/dashboard");
+        router.push(getHomePath(newSession.role));
         return true;
       } catch {
         return false;

@@ -43,4 +43,9 @@ public class Laboratory : Aggregate<Guid>
         TeacherId = teacherId;
         Description = description;
     }
+
+    public void AssignTeacher(Guid teacherId)
+    {
+        TeacherId = teacherId;
+    }
 }

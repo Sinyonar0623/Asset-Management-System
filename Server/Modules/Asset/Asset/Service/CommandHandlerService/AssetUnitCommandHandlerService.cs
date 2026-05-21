@@ -38,12 +38,30 @@ public class AssetUnitCommandHandlerService(
                 unit.ResponsibleUserId
             );
 
+            newAssetUnit.AddHistory(
+                "CREATE",
+                "Asset unit created.",
+                Guid.Empty,
+                toAvailabilityStatus: newAssetUnit.AvailabilityStatus,
+                toOperationalStatus: newAssetUnit.OperationalStatus,
+                toResponsibleUserId: newAssetUnit.ResponsibleUserId);
+
             if (unit.AssetId.HasValue && unit.AssetId.Value != Guid.Empty)
             {
                 var asset = await _assetWriteRepository.GetByIdAsync(unit.AssetId.Value, cancellationToken)
                     ?? throw new KeyNotFoundException($"Asset with id {unit.AssetId.Value} was not found.");
 
                 newAssetUnit.AssignAsset(asset);
+                newAssetUnit.AddHistory(
+                    "ASSIGN_ASSET",
+                    "Asset unit assigned to asset.",
+                    Guid.Empty,
+                    fromAvailabilityStatus: newAssetUnit.AvailabilityStatus,
+                    toAvailabilityStatus: newAssetUnit.AvailabilityStatus,
+                    fromOperationalStatus: newAssetUnit.OperationalStatus,
+                    toOperationalStatus: newAssetUnit.OperationalStatus,
+                    fromResponsibleUserId: newAssetUnit.ResponsibleUserId,
+                    toResponsibleUserId: newAssetUnit.ResponsibleUserId);
             }
             
             newAssetUnits.Add(newAssetUnit);
@@ -67,8 +85,12 @@ public class AssetUnitCommandHandlerService(
         if (await _assetUnitWriteRepository.SerialNoExistsAsync(assetUnit.SerialNo, assetUnitId, cancellationToken))
             throw new InvalidOperationException($"Serial no '{assetUnit.SerialNo}' already exists.");
 
-        var entity = await _assetUnitWriteRepository.GetByIdAsync(assetUnitId, cancellationToken)
+        var entity = await _assetUnitWriteRepository.GetByIdWithHistoriesAsync(assetUnitId, cancellationToken)
             ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
+
+        var fromAvailabilityStatus = entity.AvailabilityStatus;
+        var fromOperationalStatus = entity.OperationalStatus;
+        var fromResponsibleUserId = entity.ResponsibleUserId;
 
         entity.Update(
             assetUnit.AssetTag,
@@ -79,6 +101,15 @@ public class AssetUnitCommandHandlerService(
             assetUnit.OperationalStatus,
             assetUnit.Remark,
             assetUnit.ResponsibleUserId);
+
+        entity.AddUpdateHistory(
+            Guid.Empty,
+            fromAvailabilityStatus,
+            entity.AvailabilityStatus,
+            fromOperationalStatus,
+            entity.OperationalStatus,
+            fromResponsibleUserId,
+            entity.ResponsibleUserId);
 
         if (assetUnit.AssetId.HasValue && assetUnit.AssetId.Value != Guid.Empty)
         {
@@ -113,12 +144,66 @@ public class AssetUnitCommandHandlerService(
         return await _assetUnitReadRepository.GetAssetUnitsByAssetIdAsync(assetId, cancellationToken);
     }
 
+    public async Task<List<AssetUnitDto>> GetUnassignedAssetUnits(CancellationToken cancellationToken = default)
+    {
+        return await _assetUnitReadRepository.GetUnassignedAssetUnitsAsync(cancellationToken);
+    }
+
     public async Task<AssetUnitDto> GetAssetUnitById(Guid assetUnitId, CancellationToken cancellationToken = default)
     {
         var assetUnit = await _assetUnitReadRepository.GetAssetUnitDtoByIdAsync(assetUnitId, cancellationToken)
             ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
 
         return assetUnit;
+    }
+
+    public async Task<AssetUnitDetailDto> GetAssetUnitDetailById(Guid assetUnitId, CancellationToken cancellationToken = default)
+    {
+        var assetUnit = await _assetUnitReadRepository.GetAssetUnitDetailDtoByIdAsync(assetUnitId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
+
+        return assetUnit;
+    }
+
+    public async Task<List<AssetUnitImageDto>> AddAssetUnitImages(
+        Guid assetUnitId,
+        List<CreateAssetUnitImageDto> images,
+        CancellationToken cancellationToken = default)
+    {
+        if (assetUnitId == Guid.Empty)
+            throw new ArgumentException("Asset unit id is required.", nameof(assetUnitId));
+
+        ArgumentNullException.ThrowIfNull(images);
+
+        if (images.Count == 0) return [];
+
+        var assetUnit = await _assetUnitWriteRepository.GetByIdWithImagesAsync(assetUnitId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
+
+        var addedImages = new List<AssetUnitImageDto>(images.Count);
+
+        foreach (var image in images)
+        {
+            var addedImage = assetUnit.AddImage(
+                image.ImageUrl,
+                image.Description,
+                image.FileName,
+                image.ContentType,
+                image.FileSizeBytes);
+
+            addedImages.Add(new AssetUnitImageDto
+            {
+                Id = addedImage.Id,
+                AssetUnitId = assetUnit.Id,
+                ImageUrl = addedImage.ImageUrl,
+                Description = addedImage.Description,
+                FileName = addedImage.FileName,
+                ContentType = addedImage.ContentType,
+                FileSizeBytes = addedImage.FileSizeBytes
+            });
+        }
+
+        return addedImages;
     }
 
 }

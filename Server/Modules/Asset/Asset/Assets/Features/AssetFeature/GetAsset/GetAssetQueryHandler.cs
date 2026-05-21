@@ -7,7 +7,12 @@ public class GetAssetQueryHandler(IAssetCommandHandlerService service) : IQueryH
     private readonly IAssetCommandHandlerService _service = service;
     public async Task<GetAssetResult> Handle(GetAssetQuery request, CancellationToken cancellationToken)
     {
-        var assets = await _service.GetAssets(request.PaginationRequest, cancellationToken);
+        var assets = await _service.GetVisibleAssets(
+            request.PaginationRequest,
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetAssetResult(assets);
     }
 }

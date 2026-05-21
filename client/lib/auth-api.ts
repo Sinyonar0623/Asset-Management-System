@@ -18,10 +18,10 @@ export interface LoginApiResponse {
 }
 
 const roleByCode: Record<string, Role> = {
-  "00": "admin",
-  "01": "depthead",
-  "02": "lecturer",
-  "03": "student",
+  ADMIN: "admin",
+  HOD: "depthead",
+  TEACHER: "lecturer",
+  STUDENT: "student",
 };
 
 export function mapRoleCodeToRole(roleCode: string): Role {

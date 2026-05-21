@@ -9,7 +9,12 @@ public class GetAssetByIdQueryHandler(IAssetCommandHandlerService service)
 
     public async Task<GetAssetByIdResult> Handle(GetAssetByIdQuery request, CancellationToken cancellationToken)
     {
-        var asset = await _service.GetAssetById(request.Id, cancellationToken);
+        var asset = await _service.GetVisibleAssetById(
+            request.Id,
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetAssetByIdResult(asset);
     }
 }

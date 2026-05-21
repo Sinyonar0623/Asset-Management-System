@@ -16,7 +16,15 @@ public class CreateRequestEndpoint : ICarterModule
                     return Results.Unauthorized();
                 }
 
-                var result = await sender.Send(new CreateRequestCommand(request.Request, requesterId), cancellationToken);
+                var roleCode = httpContext.User.FindFirstValue("role_code");
+                if (string.IsNullOrWhiteSpace(roleCode))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var result = await sender.Send(
+                    new CreateRequestCommand(request.Request, requesterId, roleCode),
+                    cancellationToken);
                 var response = new CreateRequestResponse(result.Id);
 
                 return Results.Created($"/Request/{response.Id}", response);

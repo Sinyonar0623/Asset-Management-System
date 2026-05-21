@@ -7,6 +7,8 @@ public interface IAssetUnitWriteRepository : IRepository<AssetUnit, Guid>
 {
     Task<AssetUnit?> GetByIdWithHistoriesAsync(Guid assetUnitId, CancellationToken cancellationToken = default);
 
+    Task<AssetUnit?> GetByIdWithImagesAsync(Guid assetUnitId, CancellationToken cancellationToken = default);
+
     Task<bool> AssetTagExistsAsync(
         string assetTag,
         Guid? excludeAssetUnitId = null,

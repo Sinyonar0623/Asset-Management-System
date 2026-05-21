@@ -23,6 +23,9 @@ public sealed class ReleaseAssetConsumer(
 
             var isSuccess = await _service.ReleaseAssetsAsync(
                 context.Message.AssetIds,
+                context.Message.ApproverId,
+                context.Message.RequestId,
+                context.Message.ApproverId == Guid.Empty ? "Released by system." : "Released from request.",
                 context.CancellationToken);
 
             await _unitOfWork.SaveChangesAsync(context.CancellationToken);

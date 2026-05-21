@@ -9,7 +9,11 @@ public class GetAssetCountQueryHandler(IAssetCommandHandlerService service)
 
     public async Task<GetAssetCountResult> Handle(GetAssetCountQuery request, CancellationToken cancellationToken)
     {
-        var count = await _service.GetAssetCount(cancellationToken);
+        var count = await _service.GetVisibleAssetCount(
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetAssetCountResult(count);
     }
 }

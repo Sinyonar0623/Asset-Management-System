@@ -9,7 +9,13 @@ public class GetAssetByLabQueryHandler(IAssetCommandHandlerService service)
 
     public async Task<GetAssetByLabResult> Handle(GetAssetByLabQuery request, CancellationToken cancellationToken)
     {
-        var assets = await _service.GetAssetsByLab(request.LaboratoryId, request.PaginationRequest, cancellationToken);
+        var assets = await _service.GetVisibleAssetsByLab(
+            request.LaboratoryId,
+            request.PaginationRequest,
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetAssetByLabResult(assets);
     }
 }

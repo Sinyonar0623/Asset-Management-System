@@ -2,4 +2,7 @@ using Shared.Pagination;
 
 namespace Asset.Assets.Features.AssetFeature.GetAsset;
 
-public record GetAssetQuery(PaginationRequest PaginationRequest) : IQuery<GetAssetResult>;
+public record GetAssetQuery(
+    PaginationRequest PaginationRequest,
+    Guid UserId,
+    string RoleCode) : IQuery<GetAssetResult>;

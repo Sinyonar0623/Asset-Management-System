@@ -9,7 +9,12 @@ public class GetRequestQueryHandler(IRequestCommandHandlerService service)
 
     public async Task<GetRequestResult> Handle(GetRequestQuery request, CancellationToken cancellationToken)
     {
-        var requests = await _service.GetRequests(request.PaginationRequest, cancellationToken);
+        var requests = await _service.GetVisibleRequests(
+            request.PaginationRequest,
+            request.UserId,
+            request.RoleCode,
+            cancellationToken);
+
         return new GetRequestResult(requests);
     }
 }

@@ -6,6 +6,7 @@ public static class InitialParameterData
 {
     public static IReadOnlyList<ParameterEntity> Parameters { get; } =
     [
+        Create("REQUEST_TYPE", "ALLOCATE", "Allocate asset to laboratory"),
         Create("REQUEST_TYPE", "BORROW", "Borrow request"),
         Create("REQUEST_TYPE", "REPAIR", "Repair request"),
         Create("REQUEST_TYPE", "RETIRE", "Retire request"),
@@ -47,6 +48,12 @@ public static class InitialParameterData
         Create("A002", "DAMAGED", "Damaged"),
         Create("A002", "LOST", "Lost"),
         Create("A002", "RETIRED", "Retired"),
+
+        Create("ASSET_CATEGORY", "COMPUTER", "Computer"),
+        Create("ASSET_CATEGORY", "IOT", "Internet of Things"),
+        Create("ASSET_CATEGORY", "MICROCONTROLLER", "Microcontroller"),
+        Create("ASSET_CATEGORY", "ROBOTICS_EQUIPMENT", "Robotics Equipment"),
+        Create("ASSET_CATEGORY", "NOTEBOOK", "Notebook"),
 
         Create("ROLE_CODE", "ADMIN", "System administrator"),
         Create("ROLE_CODE", "HOD", "Department head"),

@@ -207,7 +207,6 @@ namespace Asset.Data.Migrations
             modelBuilder.Entity("Asset.Assets.Model.AssetUnitImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("AssetUnitImageId");
 
@@ -228,6 +227,10 @@ namespace Asset.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("FileName")
                         .HasMaxLength(255)

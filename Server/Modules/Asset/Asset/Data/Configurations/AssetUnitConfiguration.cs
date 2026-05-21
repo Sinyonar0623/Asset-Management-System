@@ -39,6 +39,10 @@ public class AssetUnitConfiguration : IEntityTypeConfiguration<AssetUnit>
             .HasForeignKey<AssetUnitCondition>("AssetUnitId")
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Navigation(a => a.Images)
+            .HasField("_images")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.OwnsMany(a => a.Histories , histories =>
         {
             histories.ToTable("AssetUnitHistories");

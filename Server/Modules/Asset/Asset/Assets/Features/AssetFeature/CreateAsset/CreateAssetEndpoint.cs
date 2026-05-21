@@ -19,9 +19,9 @@ public class CreateAssetEndpoint : ICarterModule
 
             var response = result.Adapt<CreateAssetResponse>();
 
-            return Results.Created();
+            return Results.Created($"/Asset/{response.Id}", response);
         }).WithName("CreateAsset")
-        .Produces<CreateAssetResponse>()
+        .Produces<CreateAssetResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Create Asset");
     }

@@ -93,6 +93,9 @@ builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddParameterModule(builder.Configuration);
 builder.Services.AddRequestModule(builder.Configuration);
 
+Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
+builder.WebHost.UseWebRoot("wwwroot");
+
 var app = builder.Build();
 
 // app.Use(async (context, next) =>
@@ -114,6 +117,7 @@ var app = builder.Build();
 // });
 
 app.UseCors("Frontend");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

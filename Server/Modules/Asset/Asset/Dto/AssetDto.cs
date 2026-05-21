@@ -7,4 +7,7 @@ public sealed record AssetDto
     public string Description { get; init; } = string.Empty;
     public string Category { get; init; } = string.Empty;
     public bool? IsAvailable { get; init; }
+    public string? AvailabilityStatus { get; init; }
+    public string? Location { get; init; }
+    public DateTime? UpdatedAt { get; init; }
 }

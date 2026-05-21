@@ -5,6 +5,7 @@ namespace Asset.Assets.Model;
 public class AssetUnitImage : Entity<Guid>
 {
     public string ImageUrl { get; private set; } = null!;
+    public string? Description { get; private set; }
     public string? FileName { get; private set; }
     public string? ContentType { get; private set; }
     public long? FileSizeBytes { get; private set; }
@@ -16,12 +17,15 @@ public class AssetUnitImage : Entity<Guid>
 
     private AssetUnitImage(
         string imageUrl,
+        string? description,
         string? fileName,
         string? contentType,
         long? fileSizeBytes,
         bool isPrimary)
     {
+        Id = Guid.NewGuid();
         ImageUrl = imageUrl;
+        Description = description;
         FileName = fileName;
         ContentType = contentType;
         FileSizeBytes = fileSizeBytes;
@@ -30,6 +34,7 @@ public class AssetUnitImage : Entity<Guid>
 
     public static AssetUnitImage Create(
         string imageUrl,
+        string? description = null,
         string? fileName = null,
         string? contentType = null,
         long? fileSizeBytes = null,
@@ -42,6 +47,7 @@ public class AssetUnitImage : Entity<Guid>
 
         return new AssetUnitImage(
             imageUrl.Trim(),
+            NormalizeDescription(description),
             fileName,
             contentType,
             fileSizeBytes,
@@ -55,6 +61,7 @@ public class AssetUnitImage : Entity<Guid>
 
     public void Update(
         string imageUrl,
+        string? description = null,
         string? fileName = null,
         string? contentType = null,
         long? fileSizeBytes = null)
@@ -65,8 +72,25 @@ public class AssetUnitImage : Entity<Guid>
         }
 
         ImageUrl = imageUrl.Trim();
+        Description = NormalizeDescription(description);
         FileName = fileName;
         ContentType = contentType;
         FileSizeBytes = fileSizeBytes;
+    }
+
+    private static string? NormalizeDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        var normalizedDescription = description.Trim();
+        if (normalizedDescription.Length > 1000)
+        {
+            throw new ArgumentException("Image description must not exceed 1000 characters.", nameof(description));
+        }
+
+        return normalizedDescription;
     }
 }

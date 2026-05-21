@@ -69,6 +69,118 @@ public class AssetUnit : Aggregate<Guid>
         SetStatuses(availabilityStatus, operationalStatus);
     }
 
+    public void Reserve(
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null)
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = null;
+        SetStatuses(AssetUnitStatuses.Availability.Reserved, OperationalStatus);
+
+        AddHistory(
+            "RESERVE",
+            remark ?? "Reserved for request.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void MarkInUse(
+        Guid responsibleUserId,
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null)
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = responsibleUserId;
+        SetStatuses(AssetUnitStatuses.Availability.InUse, AssetUnitStatuses.Operational.Ready);
+
+        AddHistory(
+            "MARK_IN_USE",
+            remark ?? "Marked as in use.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void Release(
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null,
+        string actionType = "RELEASE")
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = null;
+        SetStatuses(AssetUnitStatuses.Availability.Available, AssetUnitStatuses.Operational.Ready);
+
+        AddHistory(
+            actionType,
+            remark ?? "Released back to available.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void AddUpdateHistory(
+        Guid performedBy,
+        string fromAvailabilityStatus,
+        string toAvailabilityStatus,
+        string fromOperationalStatus,
+        string toOperationalStatus,
+        Guid? fromResponsibleUserId,
+        Guid? toResponsibleUserId,
+        string? remark = null)
+    {
+        if (fromAvailabilityStatus == toAvailabilityStatus
+            && fromOperationalStatus == toOperationalStatus
+            && fromResponsibleUserId == toResponsibleUserId)
+        {
+            return;
+        }
+
+        AddHistory(
+            "UPDATE",
+            remark ?? "Asset unit status updated.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: toAvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: toOperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: toResponsibleUserId);
+    }
+
     public void Update(
         string assetTag,
         string serialNo,
@@ -99,8 +211,9 @@ public class AssetUnit : Aggregate<Guid>
         _histories.Add(history);
     }
 
-    public void AddImage(
+    public AssetUnitImage AddImage(
         string imageUrl,
+        string? description = null,
         string? fileName = null,
         string? contentType = null,
         long? fileSizeBytes = null,
@@ -108,6 +221,7 @@ public class AssetUnit : Aggregate<Guid>
     {
         var image = AssetUnitImage.Create(
             imageUrl,
+            description,
             fileName,
             contentType,
             fileSizeBytes,
@@ -122,6 +236,7 @@ public class AssetUnit : Aggregate<Guid>
         }
 
         _images.Add(image);
+        return image;
     }
 
     public void RemoveImage(Guid imageId)

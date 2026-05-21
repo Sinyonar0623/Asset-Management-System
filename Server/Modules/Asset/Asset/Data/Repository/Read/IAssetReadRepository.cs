@@ -11,4 +11,11 @@ public interface IAssetReadRepository : IReadRepository<Assets.Model.Asset, Guid
         string name,
         Guid? excludeAssetModelId = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<Guid>> GetRequestedAssetIdsByRequesterAsync(
+        Guid requesterId,
+        CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, string>> GetAvailabilityStatusesByAssetIdsAsync(
+        IReadOnlyCollection<Guid> assetIds,
+        CancellationToken cancellationToken = default);
 }

@@ -23,6 +23,8 @@ public sealed class ReserveAssetConsumer(
 
             var isSuccess = await _service.ReserveAssetsAsync(
                 context.Message.AssetIds,
+                context.Message.ApproverId,
+                context.Message.RequestId,
                 context.CancellationToken);
 
             await _unitOfWork.SaveChangesAsync(context.CancellationToken);

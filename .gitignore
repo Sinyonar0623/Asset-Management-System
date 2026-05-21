@@ -55,6 +55,7 @@ next-env.d.ts
 
 # local build artifacts
 /artifacts/
+Server/Application/Api/wwwroot/uploads/
 
 .codex/
 .restore.log

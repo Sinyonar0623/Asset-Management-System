@@ -1,6 +1,7 @@
 
 
 using Request.Service.EventHandlerService;
+using Request.Requests.Jobs;
 
 namespace Request;
 
@@ -12,6 +13,7 @@ public static class RequestModule
         services.AddScoped<IRequestWriteRepository, RequestWriteRepository>();
         services.AddScoped<IRequestCommandHandlerService, RequestCommandHandlerService>();
         services.AddScoped<IRequestEventHandlerService, RequestEventHandlerService>();
+        services.AddHostedService<BorrowExpirationHostedService>();
 
         services.AddScoped<IUnitOfWork<RequestDbContext>, UnitOfWork<RequestDbContext>>();
 

@@ -61,6 +61,25 @@ public class LaboratoryCommandHandlerService(
         return true;
     }
 
+    public async Task<bool> AssignTeacher(
+        Guid laboratoryId,
+        Guid teacherId,
+        CancellationToken cancellationToken = default)
+    {
+        if (laboratoryId == Guid.Empty)
+            throw new ArgumentException("Laboratory id is required.", nameof(laboratoryId));
+
+        if (teacherId == Guid.Empty)
+            throw new ArgumentException("Teacher id is required.", nameof(teacherId));
+
+        var laboratory = await _laboratoryWriteRepository.GetByIdAsync(laboratoryId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Laboratory with id {laboratoryId} was not found.");
+
+        laboratory.AssignTeacher(teacherId);
+
+        return true;
+    }
+
     public async Task<DeleteLaboratoryOperationResult> DeleteLaboratory(
         Guid laboratoryId,
         CancellationToken cancellationToken = default)

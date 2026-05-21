@@ -167,6 +167,30 @@ public class Request : Aggregate<Guid>
         current?.Activate();
     }
 
+    public bool ReassignHODApprover(Guid oldApproverId, Guid newApproverId)
+    {
+        var changed = false;
+
+        foreach (var tracking in _trackings.Where(x =>
+                     string.Equals(x.RequiredRoleCode, RoleCodes.Hod, StringComparison.OrdinalIgnoreCase)
+                     && x.Status is TrackingStatusCodes.Waiting or TrackingStatusCodes.Pending))
+        {
+            changed = tracking.ReassignApprover(oldApproverId, newApproverId) || changed;
+        }
+
+        if (NextApproverId == oldApproverId
+            && _trackings.Any(x =>
+                x.IsCurrent
+                && string.Equals(x.RequiredRoleCode, RoleCodes.Hod, StringComparison.OrdinalIgnoreCase)
+                && x.AssignedApproverId == newApproverId))
+        {
+            NextApproverId = newApproverId;
+            changed = true;
+        }
+
+        return changed;
+    }
+
     public void MarkApproved()
     {
         Status = RequestStatusCodes.Approved;

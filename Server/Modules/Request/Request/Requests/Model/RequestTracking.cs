@@ -47,6 +47,17 @@ public class RequestTracking
         IsCurrent = false;
     }
 
+    public bool ReassignApprover(Guid oldApproverId, Guid newApproverId)
+    {
+        if (AssignedApproverId != oldApproverId)
+        {
+            return false;
+        }
+
+        AssignedApproverId = newApproverId;
+        return true;
+    }
+
     public void Approve(Guid actionByUserId, string? comment)
     {
         Status = TrackingStatusCodes.Approved;

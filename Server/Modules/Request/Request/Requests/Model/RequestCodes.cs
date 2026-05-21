@@ -2,6 +2,7 @@ namespace Request.Requests.Model;
 
 public static class RequestTypeCodes
 {
+    public const string Allocate = "ALLOCATE";
     public const string Borrow = "BORROW";
     public const string Repair = "REPAIR";
     public const string Retire = "RETIRE";
