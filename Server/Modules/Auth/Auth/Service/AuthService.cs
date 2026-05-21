@@ -288,12 +288,9 @@ public class AuthService(
             return new LoginAttemptDto(false, null, "Invalid email or password.", false, false);
         }
 
-        if (user.Session.HasValue && user.SessionActiveOn.HasValue)
+        if (user.Session.HasValue || user.SessionActiveOn.HasValue)
         {
-            var activeWindowMinutes = Math.Max(1, _jwtOptions.AccessTokenMinutes);
-            var sessionExpiredAt = user.SessionActiveOn.Value.AddMinutes(activeWindowMinutes);
-
-            if (sessionExpiredAt > DateTime.UtcNow)
+            if (HasActiveSession(user, DateTime.UtcNow))
             {
                 return new LoginAttemptDto(false, null, "User is already logged in.", false, true);
             }
@@ -337,6 +334,21 @@ public class AuthService(
             user.Email,
             user.Role.RoleCode,
             user.Role.RoleName);
+    }
+
+    private bool HasActiveSession(UserName user, DateTime utcNow)
+    {
+        if (!user.Session.HasValue || !user.SessionActiveOn.HasValue)
+        {
+            return false;
+        }
+
+        var activeWindowMinutes = Math.Max(1, _jwtOptions.AccessTokenMinutes);
+        var sessionStartedAt = DateTime.SpecifyKind(user.SessionActiveOn.Value, DateTimeKind.Utc);
+        var sessionExpiredAt = sessionStartedAt.AddMinutes(activeWindowMinutes);
+
+        // Let a login retry replace a session that is effectively at the timeout boundary.
+        return sessionExpiredAt > utcNow.AddSeconds(5);
     }
 
     private async Task ReassignHODApproversAsync(

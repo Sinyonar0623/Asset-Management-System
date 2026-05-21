@@ -6,7 +6,14 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { FilterIcon, PlusIcon, RotateCcwIcon, SearchIcon } from "lucide-react"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  FilterIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  SearchIcon,
+} from "lucide-react"
 
 import { DataTableShell, TableEmptyState } from "@/components/ce-ams/data-table-shell"
 import { PageHeader } from "@/components/ce-ams/page-header"
@@ -26,10 +33,14 @@ import { formatDate, getAssets, returnAsset, shortId, type AssetDto } from "@/li
 import { useAuth } from "@/context/AuthContext"
 import { PERMISSIONS } from "@/lib/auth"
 
+const PAGE_SIZE = 20
+
 export default function AssetListPage() {
   const { session } = useAuth()
   const [assets, setAssets] = React.useState<AssetDto[]>([])
   const [search, setSearch] = React.useState("")
+  const [pageNumber, setPageNumber] = React.useState(0)
+  const [totalCount, setTotalCount] = React.useState(0)
   const [isLoading, setLoading] = React.useState(true)
   const [returningAssetId, setReturningAssetId] = React.useState<string | null>(null)
   const canCreateAsset = session ? PERMISSIONS.canAddAsset(session.role) : false
@@ -37,10 +48,13 @@ export default function AssetListPage() {
 
   const loadAssets = React.useCallback(() => {
     setLoading(true)
-    getAssets(0, 20)
-      .then((result) => setAssets(result.items))
+    getAssets(pageNumber, PAGE_SIZE)
+      .then((result) => {
+        setAssets(result.items)
+        setTotalCount(result.count)
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [pageNumber])
 
   React.useEffect(() => {
     loadAssets()
@@ -69,9 +83,12 @@ export default function AssetListPage() {
 
   const visibleAssets = assets.filter((asset) => {
     const target =
-      `${asset.name} ${asset.category} ${asset.description} ${asset.location ?? ""}`.toLowerCase()
+      `${asset.name} ${asset.description} ${asset.location ?? ""}`.toLowerCase()
     return target.includes(search.toLowerCase())
   })
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const pageStart = totalCount === 0 ? 0 : pageNumber * PAGE_SIZE + 1
+  const pageEnd = Math.min(pageNumber * PAGE_SIZE + assets.length, totalCount)
 
   return (
     <div className="space-y-6">
@@ -112,13 +129,12 @@ export default function AssetListPage() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Asset Name</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableRow>
+                  <TableHead>Asset Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Updated</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -132,12 +148,11 @@ export default function AssetListPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">{shortId(asset.id)}</TableCell>
-                  <TableCell>{asset.category || "Unassigned"}</TableCell>
                   <TableCell>
                     <StatusBadge status={getAssetStatus(asset)} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {asset.location || "G - 001"}
+                    {asset.location || "G - 601"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {asset.updatedAt ? formatDate(asset.updatedAt) : "Not updated"}
@@ -172,6 +187,35 @@ export default function AssetListPage() {
           </Table>
         )}
       </DataTableShell>
+
+      <div className="flex items-center justify-between gap-4 rounded-[18px] border border-border bg-card px-5 py-4">
+        <p className="text-sm font-medium text-muted-foreground">
+          Showing {pageStart}-{pageEnd} of {totalCount} assets
+        </p>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-foreground">
+            Page {pageNumber + 1} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoading || pageNumber === 0}
+            onClick={() => setPageNumber((current) => Math.max(current - 1, 0))}
+          >
+            <ChevronLeftIcon className="size-4" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoading || pageNumber >= totalPages - 1}
+            onClick={() => setPageNumber((current) => current + 1)}
+          >
+            Next
+            <ChevronRightIcon className="size-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

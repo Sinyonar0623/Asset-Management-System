@@ -39,6 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     document.cookie = `${AUTH_SESSION_COOKIE_KEY}=; path=/; max-age=0; samesite=lax`;
   }, []);
 
+  const clearLocalSession = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    clearSessionCookie();
+    setSession(null);
+  }, [clearSessionCookie]);
+
   const setSessionCookie = useCallback(
     (expiresAt?: number) => {
       if (!expiresAt) {
@@ -70,8 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed: AuthSession = JSON.parse(raw);
         if (parsed.expiresAt && parsed.expiresAt <= Date.now()) {
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
-          clearSessionCookie();
+          clearLocalSession();
         } else {
           setSession(parsed);
           setSessionCookie(parsed.expiresAt);
@@ -80,12 +85,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearSessionCookie();
       }
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      clearSessionCookie();
+      clearLocalSession();
     } finally {
       setLoading(false);
     }
-  }, [clearSessionCookie, setSessionCookie]);
+  }, [clearLocalSession, clearSessionCookie, setSessionCookie]);
 
   const login = useCallback(
     async (usernameOrEmail: string, password: string): Promise<boolean> => {
@@ -126,15 +130,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Ignore API logout failure and still clear local session.
       } finally {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        clearSessionCookie();
-        setSession(null);
+        clearLocalSession();
         router.push("/login");
       }
     };
 
     void doLogout();
-  }, [clearSessionCookie, router]);
+  }, [clearLocalSession, router]);
+
+  useEffect(() => {
+    if (!session?.expiresAt) return;
+
+    const logoutBeforeTokenExpiresMs = 10000;
+    const delay = Math.max(session.expiresAt - Date.now() - logoutBeforeTokenExpiresMs, 0);
+    const timeoutId = window.setTimeout(() => {
+      logout();
+    }, delay);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [logout, session?.expiresAt]);
 
   const value = useMemo(
     () => ({ session, isLoading, login, logout }),

@@ -73,10 +73,8 @@ export function AppSidebar() {
     >
       <SidebarHeader className="px-7 py-8">
         <div className="space-y-2">
-          <div className="text-[28px] font-semibold leading-none tracking-normal text-white">SWU CPE AMS</div>
-          <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-400">
-            Asset Management
-          </p>
+          <div className="text-[28px] font-semibold leading-none tracking-normal text-white">Asset Management System</div>
+          
         </div>
       </SidebarHeader>
 
@@ -100,7 +98,7 @@ export function AppSidebar() {
                       asChild={!item.disabled}
                       disabled={item.disabled}
                       className={cn(
-                        "h-12 rounded-[14px] px-4 text-base font-medium text-slate-300 hover:bg-slate-900 hover:text-white data-[active=true]:bg-primary data-[active=true]:text-white",
+                        "h-12 rounded-[14px] px-4 text-base font-medium text-slate-300 hover:bg-slate-900 hover:text-white data-[active=true]:border data-[active=true]:border-sky-300/40 data-[active=true]:bg-sky-100 data-[active=true]:font-semibold data-[active=true]:text-slate-950 data-[active=true]:shadow-[0_10px_30px_rgba(56,189,248,0.18)] data-[active=true]:[&_svg]:text-sky-700",
                         item.disabled && "cursor-not-allowed opacity-50"
                       )}
                       data-active={isActive}

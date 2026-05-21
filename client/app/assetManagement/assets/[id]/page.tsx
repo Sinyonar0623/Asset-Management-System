@@ -331,7 +331,7 @@ export default function AssetDetailPage() {
           <CardContent className="space-y-2 text-sm">
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Location</span>
-              <span>{asset?.location || "กองกลางห้องเก็บของ"}</span>
+              <span>{asset?.location || "G-600"}</span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-muted-foreground">Updated</span>

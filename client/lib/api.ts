@@ -1,5 +1,5 @@
 import axios, { AxiosHeaders } from "axios";
-import { LOCAL_STORAGE_KEY } from "./auth";
+import { AUTH_SESSION_COOKIE_KEY, LOCAL_STORAGE_KEY } from "./auth";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
@@ -15,6 +15,11 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+function clearBrowserSession() {
+  localStorage.removeItem(LOCAL_STORAGE_KEY);
+  document.cookie = `${AUTH_SESSION_COOKIE_KEY}=; path=/; max-age=0; samesite=lax`;
+}
 
 api.interceptors.request.use((config) => {
   if (typeof window === "undefined") return config;
@@ -40,5 +45,26 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window === "undefined") return Promise.reject(error);
+
+    const status = error?.response?.status;
+    const requestUrl = error?.config?.url as string | undefined;
+    const isLoginRequest = requestUrl?.includes("/auth/login") ?? false;
+
+    if (status === 401 && !isLoginRequest) {
+      clearBrowserSession();
+
+      if (window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

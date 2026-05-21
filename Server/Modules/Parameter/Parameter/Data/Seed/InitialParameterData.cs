@@ -54,6 +54,7 @@ public static class InitialParameterData
         Create("ASSET_CATEGORY", "MICROCONTROLLER", "Microcontroller"),
         Create("ASSET_CATEGORY", "ROBOTICS_EQUIPMENT", "Robotics Equipment"),
         Create("ASSET_CATEGORY", "NOTEBOOK", "Notebook"),
+        Create("ASSET_CATEGORY", "OTHER", "Other"),
 
         Create("ROLE_CODE", "ADMIN", "System administrator"),
         Create("ROLE_CODE", "HOD", "Department head"),

@@ -15,7 +15,7 @@ public class AssetCommandHandlerService(
     ILaboratoryWriteRepository laboratoryWriteRepository
     ) : IAssetCommandHandlerService
 {
-    private const string DefaultLocation = "กองกลางห้องเก็บของ";
+    private const string DefaultLocation = "G-600";
 
     private readonly IAssetWriteRepository _assetWriteRepository = assetWriteRepository;
     private readonly IAssetReadRepository _assetReadRepository = assetReadRepository;

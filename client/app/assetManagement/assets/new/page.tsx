@@ -26,6 +26,8 @@ import { useRouter } from "next/navigation"
 import {
   ArrowLeftIcon,
   BoxIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   CheckIcon,
   EyeIcon,
   ImageIcon,
@@ -80,6 +82,7 @@ import {
 import { cn } from "@/lib/utils"
 
 const ASSET_CATEGORY_GROUP = "ASSET_CATEGORY"
+const UNIT_DIALOG_PAGE_SIZE = 6
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "")
 
 function resolveAssetImageUrl(imageUrl: string) {
@@ -115,6 +118,7 @@ export default function CreateAssetPage() {
   const [units, setUnits] = React.useState<AssetUnitDto[]>([])
   const [selectedUnitIds, setSelectedUnitIds] = React.useState<string[]>([])
   const [unitSearch, setUnitSearch] = React.useState("")
+  const [unitPageNumber, setUnitPageNumber] = React.useState(0)
   const [unitDialogOpen, setUnitDialogOpen] = React.useState(false)
   const [addUnitDialogOpen, setAddUnitDialogOpen] = React.useState(false)
   const [isLoadingLookups, setLoadingLookups] = React.useState(true)
@@ -180,6 +184,21 @@ export default function CreateAssetPage() {
       return searchable.includes(keyword)
     })
   }, [unitSearch, units])
+  const totalUnitPages = Math.max(1, Math.ceil(visibleUnits.length / UNIT_DIALOG_PAGE_SIZE))
+  const unitPageStart = visibleUnits.length === 0 ? 0 : unitPageNumber * UNIT_DIALOG_PAGE_SIZE + 1
+  const unitPageEnd = Math.min((unitPageNumber + 1) * UNIT_DIALOG_PAGE_SIZE, visibleUnits.length)
+  const pagedVisibleUnits = React.useMemo(
+    () =>
+      visibleUnits.slice(
+        unitPageNumber * UNIT_DIALOG_PAGE_SIZE,
+        (unitPageNumber + 1) * UNIT_DIALOG_PAGE_SIZE
+      ),
+    [unitPageNumber, visibleUnits]
+  )
+
+  React.useEffect(() => {
+    setUnitPageNumber((current) => Math.min(current, totalUnitPages - 1))
+  }, [totalUnitPages])
 
   const canSubmit = Boolean(name.trim() && category && selectedUnitIds.length > 0)
 
@@ -450,7 +469,7 @@ export default function CreateAssetPage() {
       </form>
 
       <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-        <DialogContent className="w-[min(1120px,calc(100vw-64px))] max-w-none">
+        <DialogContent className="grid max-h-[calc(100svh-48px)] w-[min(1120px,calc(100vw-48px))] max-w-none grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Assign Existing Unit IDs</DialogTitle>
             <DialogDescription>
@@ -458,14 +477,17 @@ export default function CreateAssetPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid min-h-[560px] grid-cols-[minmax(0,1fr)_420px] gap-5">
+          <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_420px] gap-5 overflow-hidden">
             <div className="flex min-h-0 flex-col gap-4">
               <div className="flex items-center gap-3">
                 <div className="relative min-w-0 flex-1">
                   <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={unitSearch}
-                    onChange={(event) => setUnitSearch(event.target.value)}
+                    onChange={(event) => {
+                      setUnitSearch(event.target.value)
+                      setUnitPageNumber(0)
+                    }}
                     className="pl-9"
                     placeholder="Search by tag, serial, brand, or status"
                   />
@@ -476,87 +498,122 @@ export default function CreateAssetPage() {
                 </Button>
               </div>
 
-              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[18px] border border-border bg-muted/20 p-3">
-                {isLoadingLookups ? (
-                  <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2Icon className="size-4 animate-spin" />
-                    Loading unassigned units
-                  </div>
-                ) : visibleUnits.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-                    <p className="font-semibold text-foreground">No unassigned units found</p>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                      Create Asset Unit records first. Once they are unassigned, they will appear here.
-                    </p>
-                    <Button
-                      type="button"
-                      className="mt-2"
-                      onClick={() => setAddUnitDialogOpen(true)}
-                    >
-                      <PlusIcon className="size-4" />
-                      Add Asset Unit
-                    </Button>
-                  </div>
-                ) : (
-                  visibleUnits.map((unit) => {
-                    const selected = isUnitSelected(unit, selectedUnitIds)
-                    const loadingDetail = Boolean(unit.id && detailLoadingId === unit.id)
-
-                    return (
-                      <button
-                        key={getUnitIdentity(unit)}
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[18px] border border-border bg-muted/20">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+                  {isLoadingLookups ? (
+                    <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2Icon className="size-4 animate-spin" />
+                      Loading unassigned units
+                    </div>
+                  ) : visibleUnits.length === 0 ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                      <p className="font-semibold text-foreground">No unassigned units found</p>
+                      <p className="max-w-sm text-sm text-muted-foreground">
+                        Create Asset Unit records first. Once they are unassigned, they will appear here.
+                      </p>
+                      <Button
                         type="button"
-                        onClick={() => openUnitDetail(unit)}
-                        className={cn(
-                          "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-[16px] border bg-card p-4 text-left transition hover:border-blue-300 hover:bg-blue-50/70",
-                          selected ? "border-blue-500 ring-2 ring-blue-500/15" : "border-border"
-                        )}
+                        className="mt-2"
+                        onClick={() => setAddUnitDialogOpen(true)}
                       >
-                        <span
+                        <PlusIcon className="size-4" />
+                        Add Asset Unit
+                      </Button>
+                    </div>
+                  ) : (
+                    pagedVisibleUnits.map((unit) => {
+                      const selected = isUnitSelected(unit, selectedUnitIds)
+                      const loadingDetail = Boolean(unit.id && detailLoadingId === unit.id)
+
+                      return (
+                        <button
+                          key={getUnitIdentity(unit)}
+                          type="button"
+                          onClick={() => openUnitDetail(unit)}
                           className={cn(
-                            "flex size-6 items-center justify-center rounded-full border",
-                            selected
-                              ? "border-blue-600 bg-blue-600 text-white"
-                              : "border-border bg-card text-transparent"
+                            "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-[16px] border bg-card p-4 text-left transition hover:border-blue-300 hover:bg-blue-50/70",
+                            selected ? "border-blue-500 ring-2 ring-blue-500/15" : "border-border"
                           )}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            toggleUnit(unit)
-                          }}
                         >
-                          <CheckIcon className="size-4" />
-                        </span>
+                          <span
+                            className={cn(
+                              "flex size-6 items-center justify-center rounded-full border",
+                              selected
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "border-border bg-card text-transparent"
+                            )}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              toggleUnit(unit)
+                            }}
+                          >
+                            <CheckIcon className="size-4" />
+                          </span>
 
-                        <span className="min-w-0 space-y-2">
-                          <span className="flex items-center gap-2">
-                            <span className="truncate text-sm font-semibold text-foreground">
-                              {unit.name || "Unnamed unit"}
+                          <span className="min-w-0 space-y-2">
+                            <span className="flex items-center gap-2">
+                              <span className="truncate text-sm font-semibold text-foreground">
+                                {unit.name || "Unnamed unit"}
+                              </span>
+                              <Badge variant="outline" className="font-mono">
+                                {shortId(unit.id)}
+                              </Badge>
                             </span>
-                            <Badge variant="outline" className="font-mono">
-                              {shortId(unit.id)}
-                            </Badge>
+                            <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                              <span>{unit.assetTag || "No asset tag"}</span>
+                              <span>{unit.serialNo || "No serial"}</span>
+                              <span>{unit.brand || "No brand"}</span>
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <StatusBadge status={unit.availabilityStatus} />
+                              <StatusBadge status={unit.operationalStatus} />
+                            </span>
                           </span>
-                          <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span>{unit.assetTag || "No asset tag"}</span>
-                            <span>{unit.serialNo || "No serial"}</span>
-                            <span>{unit.brand || "No brand"}</span>
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <StatusBadge status={unit.availabilityStatus} />
-                            <StatusBadge status={unit.operationalStatus} />
-                          </span>
-                        </span>
 
-                        <span className="flex items-center gap-2">
-                          {loadingDetail ? (
-                            <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
-                          ) : (
-                            <EyeIcon className="size-4 text-muted-foreground" />
-                          )}
-                        </span>
-                      </button>
-                    )
-                  })
+                          <span className="flex items-center gap-2">
+                            {loadingDetail ? (
+                              <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <EyeIcon className="size-4 text-muted-foreground" />
+                            )}
+                          </span>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+
+                {visibleUnits.length > 0 && (
+                  <div className="flex items-center justify-between gap-3 border-t border-border bg-card px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Showing {unitPageStart}-{unitPageEnd} of {visibleUnits.length} units
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-foreground">
+                        Page {unitPageNumber + 1} of {totalUnitPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        disabled={unitPageNumber === 0}
+                        onClick={() => setUnitPageNumber((current) => Math.max(current - 1, 0))}
+                      >
+                        <ChevronLeftIcon className="size-4" />
+                        <span className="sr-only">Previous unit page</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        disabled={unitPageNumber >= totalUnitPages - 1}
+                        onClick={() => setUnitPageNumber((current) => current + 1)}
+                      >
+                        <ChevronRightIcon className="size-4" />
+                        <span className="sr-only">Next unit page</span>
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
