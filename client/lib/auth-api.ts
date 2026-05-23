@@ -37,6 +37,11 @@ export async function loginApi(payload: LoginApiRequest): Promise<LoginApiRespon
   return data;
 }
 
+export async function refreshSessionApi(): Promise<LoginApiResponse> {
+  const { data } = await api.post<LoginApiResponse>("/auth/refresh");
+  return data;
+}
+
 export async function logoutApi(): Promise<void> {
   await api.post("/auth/logout");
 }

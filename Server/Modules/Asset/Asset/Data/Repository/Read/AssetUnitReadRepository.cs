@@ -131,6 +131,35 @@ public class AssetUnitReadRepository(AssetDbContext dbContext)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<List<AssetUnitImageDto>?> GetAssetUnitImagesByAssetUnitIdAsync(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var assetUnitExists = await _context.AssetUnits
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == assetUnitId, cancellationToken);
+
+        if (!assetUnitExists)
+        {
+            return null;
+        }
+
+        return await _context.AssetUnitImages
+            .AsNoTracking()
+            .Where(image => EF.Property<Guid>(image, "AssetUnitId") == assetUnitId)
+            .Select(image => new AssetUnitImageDto
+            {
+                Id = image.Id,
+                AssetUnitId = EF.Property<Guid>(image, "AssetUnitId"),
+                ImageUrl = image.ImageUrl,
+                Description = image.Description,
+                FileName = image.FileName,
+                ContentType = image.ContentType,
+                FileSizeBytes = image.FileSizeBytes
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<AssetHistoryDto>> GetAssetHistoriesByAssetIdAsync(
         Guid assetId,
         CancellationToken cancellationToken = default)

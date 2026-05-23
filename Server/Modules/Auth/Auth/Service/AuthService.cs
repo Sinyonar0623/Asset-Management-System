@@ -312,6 +312,40 @@ public class AuthService(
         return new LoginAttemptDto(true, loginUser, null, false, false);
     }
 
+    public async Task<LoginAttemptDto> RefreshSessionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return new LoginAttemptDto(false, null, "Invalid user.", true, false);
+        }
+
+        var user = await _repository.GetByIdWithRoleAsync(userId, cancellationToken);
+        if (user is null || user.Role is null)
+        {
+            return new LoginAttemptDto(false, null, "User was not found.", false, false);
+        }
+
+        if (!HasActiveSession(user, DateTime.UtcNow))
+        {
+            user.ClearSession();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return new LoginAttemptDto(false, null, "Session has expired.", false, false);
+        }
+
+        user.SetSession();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var loginUser = new LoginUserDto(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role.RoleCode,
+            user.Role.RoleName
+        );
+
+        return new LoginAttemptDto(true, loginUser, null, false, false);
+    }
+
     public async Task<bool> LogoutAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await _repository.GetByIdAsync(userId, cancellationToken);

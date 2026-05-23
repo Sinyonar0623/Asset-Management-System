@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Loader2Icon, SendIcon } from "lucide-react"
+import { ImageIcon, Loader2Icon, SearchIcon, SendIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { StatusBadge } from "@/components/ce-ams/status-badge"
 import {
   Dialog,
   DialogContent,
@@ -27,9 +28,14 @@ import { useAuth } from "@/context/AuthContext"
 import {
   createRequest,
   getAllocatableAssets,
+  getAssetUnitImages,
+  getAssetUnitsByAssetId,
   getAssetsByLaboratory,
   getLaboratories,
+  shortId,
   type AssetDto,
+  type AssetUnitImageDto,
+  type AssetUnitDto,
   type CreateRequestPayload,
   type LaboratoryDto,
   type RequestDetailDto,
@@ -50,6 +56,8 @@ const assetSectionTitle: Record<Exclude<RequestType, "BORROW">, string> = {
   RETIRE: "Assets in target laboratory",
 }
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "")
+
 function getLaboratoryLabel(laboratory: LaboratoryDto) {
   const name = laboratory.laboratoryName?.trim()
   const roomNo = laboratory.roomNo?.trim()
@@ -65,13 +73,46 @@ function toApiDate(value: string) {
   return value ? new Date(`${value}T00:00:00`).toISOString() : null
 }
 
+function getAssetStatus(asset?: AssetDto | null) {
+  if (!asset) return "UNKNOWN"
+  return asset.availabilityStatus || (asset.isAvailable ? "AVAILABLE" : "UNAVAILABLE")
+}
+
+function getAssetUnitLabel(unit: AssetUnitDto) {
+  return unit.assetTag || unit.serialNo || unit.name || shortId(unit.id)
+}
+
+function resolveAssetImageUrl(imageUrl: string) {
+  const normalizedUrl = imageUrl.trim().replaceAll("\\", "/")
+
+  if (/^(data:|blob:)/i.test(normalizedUrl)) {
+    return normalizedUrl
+  }
+
+  if (/^https?:/i.test(normalizedUrl)) {
+    return encodeURI(normalizedUrl)
+  }
+
+  if (apiBaseUrl) {
+    const path = normalizedUrl.startsWith("/") ? normalizedUrl : `/${normalizedUrl}`
+    return encodeURI(`${apiBaseUrl}${path}`)
+  }
+
+  return encodeURI(normalizedUrl)
+}
+
 export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
   const { session } = useAuth()
   const [open, setOpen] = React.useState(false)
+  const [previewAsset, setPreviewAsset] = React.useState<AssetDto | null>(null)
+  const [previewAssetUnits, setPreviewAssetUnits] = React.useState<AssetUnitDto[]>([])
+  const [previewUnitImages, setPreviewUnitImages] = React.useState<AssetUnitImageDto[]>([])
+  const [selectedPreviewUnitId, setSelectedPreviewUnitId] = React.useState("")
   const [laboratories, setLaboratories] = React.useState<LaboratoryDto[]>([])
   const [assets, setAssets] = React.useState<AssetDto[]>([])
   const [requestType, setRequestType] = React.useState<RequestType>("BORROW")
   const [targetLaboratoryId, setTargetLaboratoryId] = React.useState("")
+  const [assetSearch, setAssetSearch] = React.useState("")
   const [quantity, setQuantity] = React.useState("1")
   const [purpose, setPurpose] = React.useState("")
   const [borrowFrom, setBorrowFrom] = React.useState("")
@@ -83,22 +124,27 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
   const [reason, setReason] = React.useState("")
   const [isSubmitting, setSubmitting] = React.useState(false)
   const [isLoadingAssets, setLoadingAssets] = React.useState(false)
+  const [isLoadingPreviewUnits, setLoadingPreviewUnits] = React.useState(false)
+  const [isLoadingPreviewImages, setLoadingPreviewImages] = React.useState(false)
 
   const canCreateMaintenance = session?.role !== "student"
+  const sessionRole = session?.role
+  const sessionUserId = session?.userId
+  const sessionLookupKey = `${sessionRole ?? ""}:${sessionUserId ?? ""}`
   const requestTypeOptions: Array<{ value: RequestType; label: string }> =
-    session?.role === "admin"
+    sessionRole === "admin"
       ? [
+        { value: "ALLOCATE", label: requestTypeLabels.ALLOCATE },
+        { value: "BORROW", label: requestTypeLabels.BORROW },
+        { value: "REPAIR", label: requestTypeLabels.REPAIR },
+        { value: "RETIRE", label: requestTypeLabels.RETIRE },
+      ]
+      : canCreateMaintenance
+        ? [
           { value: "ALLOCATE", label: requestTypeLabels.ALLOCATE },
-          { value: "BORROW", label: requestTypeLabels.BORROW },
           { value: "REPAIR", label: requestTypeLabels.REPAIR },
           { value: "RETIRE", label: requestTypeLabels.RETIRE },
         ]
-      : canCreateMaintenance
-        ? [
-            { value: "ALLOCATE", label: requestTypeLabels.ALLOCATE },
-            { value: "REPAIR", label: requestTypeLabels.REPAIR },
-            { value: "RETIRE", label: requestTypeLabels.RETIRE },
-          ]
         : [{ value: "BORROW", label: requestTypeLabels.BORROW }]
 
   const requiresAssets = requestType !== "BORROW"
@@ -106,12 +152,28 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
   React.useEffect(() => {
     if (!open) return
 
-    setRequestType(session?.role === "admin" || !canCreateMaintenance ? "BORROW" : "ALLOCATE")
+    const [currentRole, currentUserId] = sessionLookupKey.split(":")
+
+    setRequestType(currentRole === "admin" || !canCreateMaintenance ? "BORROW" : "ALLOCATE")
 
     getLaboratories()
       .then((items) => {
-        setLaboratories(items)
-        setTargetLaboratoryId((current) => current || items[0]?.id || "")
+        const visibleLaboratories =
+          currentRole === "lecturer" && currentUserId
+            ? items.filter(
+              (laboratory) =>
+                laboratory.teacherId?.toLowerCase() === currentUserId.toLowerCase()
+            )
+            : items
+
+        setLaboratories(visibleLaboratories)
+        setTargetLaboratoryId((current) => {
+          if (current && visibleLaboratories.some((laboratory) => laboratory.id === current)) {
+            return current
+          }
+
+          return visibleLaboratories[0]?.id || ""
+        })
       })
       .catch(() => {
         toast({
@@ -120,15 +182,17 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
           variant: "destructive",
         })
       })
-  }, [canCreateMaintenance, open, session?.role])
+  }, [canCreateMaintenance, open, sessionLookupKey])
 
   React.useEffect(() => {
     if (!open || !requiresAssets || !targetLaboratoryId) {
       setAssets([])
+      setAssetSearch("")
       setSelectedAssetIds([])
       return
     }
 
+    setAssetSearch("")
     setSelectedAssetIds([])
     setLoadingAssets(true)
     const loader =
@@ -151,6 +215,41 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
       })
       .finally(() => setLoadingAssets(false))
   }, [open, requestType, requiresAssets, targetLaboratoryId])
+
+  React.useEffect(() => {
+    if (!previewAsset?.id) {
+      setPreviewAssetUnits([])
+      setPreviewUnitImages([])
+      setSelectedPreviewUnitId("")
+      return
+    }
+
+    setLoadingPreviewUnits(true)
+    getAssetUnitsByAssetId(previewAsset.id)
+      .then((units) => {
+        setPreviewAssetUnits(units)
+        setSelectedPreviewUnitId(units[0]?.id || "")
+      })
+      .catch(() => {
+        setPreviewAssetUnits([])
+        setPreviewUnitImages([])
+        setSelectedPreviewUnitId("")
+      })
+      .finally(() => setLoadingPreviewUnits(false))
+  }, [previewAsset?.id])
+
+  React.useEffect(() => {
+    if (!selectedPreviewUnitId) {
+      setPreviewUnitImages([])
+      return
+    }
+
+    setLoadingPreviewImages(true)
+    getAssetUnitImages(selectedPreviewUnitId)
+      .then(setPreviewUnitImages)
+      .catch(() => setPreviewUnitImages([]))
+      .finally(() => setLoadingPreviewImages(false))
+  }, [selectedPreviewUnitId])
 
   const canSubmit = React.useMemo(() => {
     if (!targetLaboratoryId || !reason.trim()) return false
@@ -181,8 +280,29 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
     targetLaboratoryId,
   ])
 
+  const visibleAssets = React.useMemo(() => {
+    const query = assetSearch.trim().toLowerCase()
+    if (!query) return assets
+
+    return assets.filter((asset) => {
+      const target = [
+        asset.name,
+        asset.description,
+        asset.category,
+        asset.location,
+        shortId(asset.id),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+
+      return target.includes(query)
+    })
+  }, [assetSearch, assets])
+
   function resetTypeSpecificFields() {
     setAssets([])
+    setAssetSearch("")
     setSelectedAssetIds([])
     setQuantity("1")
     setPurpose("")
@@ -238,6 +358,10 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
 
   function resetForm() {
     setReason("")
+    setPreviewAsset(null)
+    setPreviewAssetUnits([])
+    setPreviewUnitImages([])
+    setSelectedPreviewUnitId("")
     resetTypeSpecificFields()
   }
 
@@ -273,8 +397,29 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
     }
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      setPreviewAsset(null)
+      setPreviewAssetUnits([])
+      setPreviewUnitImages([])
+      setSelectedPreviewUnitId("")
+    }
+  }
+
+  function closePreview() {
+    setPreviewAsset(null)
+    setPreviewAssetUnits([])
+    setPreviewUnitImages([])
+    setSelectedPreviewUnitId("")
+  }
+
+  const selectedPreviewUnit = previewAssetUnits.find(
+    (unit) => unit.id === selectedPreviewUnitId
+  )
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <SendIcon className="size-4" />
@@ -380,6 +525,21 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
                     <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
                   )}
                 </div>
+                {assets.length > 0 && (
+                  <div className="relative">
+                    <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={assetSearch}
+                      onChange={(event) => setAssetSearch(event.target.value)}
+                      className="pl-9"
+                      placeholder={
+                        requestType === "ALLOCATE"
+                          ? "Search central storage assets"
+                          : "Search laboratory assets"
+                      }
+                    />
+                  </div>
+                )}
                 {assets.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {isLoadingAssets
@@ -388,31 +548,50 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
                         ? "No allocatable assets found in central storage."
                         : "No assets found for this laboratory."}
                   </p>
+                ) : visibleAssets.length === 0 ? (
+                  <p className="rounded-[8px] border border-dashed border-border p-4 text-sm text-muted-foreground">
+                    No assets match this search.
+                  </p>
                 ) : (
                   <div className="max-h-44 space-y-2 overflow-y-auto">
-                    {assets.map((asset) => {
+                    {visibleAssets.map((asset) => {
                       if (!asset.id) return null
+                      const checkboxId = `request-asset-${asset.id}`
 
                       return (
-                        <label
+                        <div
                           key={asset.id}
-                          className="flex cursor-pointer items-start gap-3 rounded-[8px] border border-border p-3 text-sm"
+                          className="flex items-start justify-between gap-3 rounded-[8px] border border-border p-3 text-sm"
                         >
-                          <input
-                            type="checkbox"
-                            className="mt-1"
-                            checked={selectedAssetIds.includes(asset.id)}
-                            onChange={() => toggleAsset(asset.id as string)}
-                          />
-                          <span className="min-w-0">
-                            <span className="block truncate font-semibold text-foreground">
-                              {asset.name || "Unnamed asset"}
-                            </span>
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {asset.category || "Uncategorized"}
-                            </span>
-                          </span>
-                        </label>
+                          <div className="flex min-w-0 items-start gap-3">
+                            <input
+                              id={checkboxId}
+                              type="checkbox"
+                              className="mt-1"
+                              checked={selectedAssetIds.includes(asset.id)}
+                              onChange={() => toggleAsset(asset.id as string)}
+                            />
+                            <label htmlFor={checkboxId} className="min-w-0 cursor-pointer">
+                              <span className="block truncate font-semibold text-foreground">
+                                {asset.name || "Unnamed asset"}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {asset.category || "Uncategorized"}
+                              </span>
+                            </label>
+                          </div>
+                          {requestType === "ALLOCATE" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="shrink-0"
+                              onClick={() => setPreviewAsset(asset)}
+                            >
+                              Open
+                            </Button>
+                          )}
+                        </div>
                       )
                     })}
                   </div>
@@ -491,6 +670,173 @@ export function CreateRequestDialog({ onCreated }: { onCreated?: () => void }) {
           </DialogFooter>
         </form>
       </DialogContent>
+        <Dialog open={Boolean(previewAsset)} onOpenChange={(nextOpen) => {
+          if (!nextOpen) closePreview()
+        }}>
+          <DialogContent className="max-h-[min(90vh,760px)] max-w-[560px] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{previewAsset?.name || "Asset preview"}</DialogTitle>
+              <DialogDescription>
+                Quick asset information from central storage.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4 rounded-[8px] border border-border p-4">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-muted-foreground">
+                    Asset ID
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-semibold">
+                    {shortId(previewAsset?.id)}
+                  </p>
+                </div>
+                <StatusBadge status={getAssetStatus(previewAsset)} />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-[8px] border border-border p-4">
+                  <p className="text-sm text-muted-foreground">Category</p>
+                  <p className="mt-1 font-semibold">
+                    {previewAsset?.category || "Uncategorized"}
+                  </p>
+                </div>
+                <div className="rounded-[8px] border border-border p-4">
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="mt-1 font-semibold">
+                    {previewAsset?.location || "Central storage"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-[8px] border border-border p-4">
+                <p className="text-sm text-muted-foreground">Description</p>
+                <p className="mt-2 text-sm leading-6">
+                  {previewAsset?.description || "No description"}
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-[8px] border border-border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-muted-foreground">Asset Units</p>
+                  {isLoadingPreviewUnits && (
+                    <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+
+                {previewAssetUnits.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {isLoadingPreviewUnits ? "Loading units" : "No asset units found"}
+                  </p>
+                ) : (
+                  <>
+                    <Select
+                      value={selectedPreviewUnitId}
+                      onValueChange={setSelectedPreviewUnitId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select asset unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {previewAssetUnits.map((unit) => (
+                          <SelectItem key={unit.id ?? unit.assetTag} value={unit.id as string}>
+                            {getAssetUnitLabel(unit)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {selectedPreviewUnit && (
+                      <div className="space-y-3">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="rounded-[8px] bg-muted/40 p-3">
+                            <p className="text-xs text-muted-foreground">Serial No</p>
+                            <p className="mt-1 truncate text-sm font-semibold">
+                              {selectedPreviewUnit.serialNo || "-"}
+                            </p>
+                          </div>
+                          <div className="rounded-[8px] bg-muted/40 p-3">
+                            <p className="text-xs text-muted-foreground">Brand</p>
+                            <p className="mt-1 truncate text-sm font-semibold">
+                              {selectedPreviewUnit.brand || "-"}
+                            </p>
+                          </div>
+                          <div className="rounded-[8px] bg-muted/40 p-3">
+                            <p className="text-xs text-muted-foreground">Availability</p>
+                            <div className="mt-2">
+                              <StatusBadge status={selectedPreviewUnit.availabilityStatus} />
+                            </div>
+                          </div>
+                          <div className="rounded-[8px] bg-muted/40 p-3">
+                            <p className="text-xs text-muted-foreground">Operational</p>
+                            <div className="mt-2">
+                              <StatusBadge status={selectedPreviewUnit.operationalStatus} />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-[8px] border border-border bg-muted">
+                          <div className="border-b border-border bg-background px-4 py-3">
+                            <p className="text-xs font-semibold text-muted-foreground">
+                              Image for {getAssetUnitLabel(selectedPreviewUnit)}
+                            </p>
+                          </div>
+                          {isLoadingPreviewImages ? (
+                            <div className="flex h-56 items-center justify-center">
+                              <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : previewUnitImages.length > 0 ? (
+                            <div className="grid gap-3 p-3 sm:grid-cols-2">
+                              {previewUnitImages.map((image) => (
+                                <a
+                                  key={image.id}
+                                  href={resolveAssetImageUrl(image.imageUrl)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="group overflow-hidden rounded-[8px] border border-border bg-card"
+                                >
+                                  <div
+                                    aria-label={
+                                      image.description ||
+                                      image.fileName ||
+                                      getAssetUnitLabel(selectedPreviewUnit)
+                                    }
+                                    className="h-44 bg-muted bg-cover bg-center"
+                                    role="img"
+                                    style={{
+                                      backgroundImage: `url("${resolveAssetImageUrl(image.imageUrl)}")`,
+                                    }}
+                                  />
+                                  <div className="border-t border-border bg-background px-3 py-2">
+                                    <p className="truncate text-xs font-semibold text-foreground">
+                                      {image.description || image.fileName || "Unit image"}
+                                    </p>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex h-56 flex-col items-center justify-center gap-3 text-muted-foreground">
+                              <ImageIcon className="size-8" />
+                              <p className="text-sm font-medium">No image for this unit</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" onClick={closePreview}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
     </Dialog>
   )
 }

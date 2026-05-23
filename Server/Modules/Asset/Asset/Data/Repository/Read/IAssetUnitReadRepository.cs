@@ -20,6 +20,10 @@ public interface IAssetUnitReadRepository : IReadRepository<AssetUnit, Guid>
         Guid assetUnitId,
         CancellationToken cancellationToken = default);
 
+    Task<List<AssetUnitImageDto>?> GetAssetUnitImagesByAssetUnitIdAsync(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default);
+
     Task<List<AssetHistoryDto>> GetAssetHistoriesByAssetIdAsync(
         Guid assetId,
         CancellationToken cancellationToken = default);

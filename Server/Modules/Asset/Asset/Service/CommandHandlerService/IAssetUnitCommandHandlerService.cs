@@ -9,6 +9,7 @@ public interface IAssetUnitCommandHandlerService
     Task<List<AssetUnitDto>> GetUnassignedAssetUnits(CancellationToken cancellationToken = default);
     Task<AssetUnitDto> GetAssetUnitById(Guid assetUnitId, CancellationToken cancellationToken = default);
     Task<AssetUnitDetailDto> GetAssetUnitDetailById(Guid assetUnitId, CancellationToken cancellationToken = default);
+    Task<List<AssetUnitImageDto>> GetAssetUnitImagesByAssetUnitId(Guid assetUnitId, CancellationToken cancellationToken = default);
     Task<List<AssetUnitImageDto>> AddAssetUnitImages(
         Guid assetUnitId,
         List<CreateAssetUnitImageDto> images,

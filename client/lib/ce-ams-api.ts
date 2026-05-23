@@ -259,6 +259,13 @@ export async function getAssetUnitDetail(id: string) {
   return data.assetUnit
 }
 
+export async function getAssetUnitImages(assetUnitId: string) {
+  const { data } = await api.get<{ images: AssetUnitImageDto[] }>(
+    `/AssetUnit/${assetUnitId}/images`
+  )
+  return data.images
+}
+
 export async function createAssetUnits(payload: CreateAssetUnitPayload) {
   const { data } = await api.post<{ id: string[] }>("/AssetUnit", payload)
   return data.id

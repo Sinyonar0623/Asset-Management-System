@@ -7,6 +7,7 @@ public interface IAuthService
 {   
     Task<Guid> AddNewUser(UsernameDto user, CancellationToken cancellationToken);
     Task<LoginAttemptDto> LoginAsync(string email, string password, CancellationToken cancellationToken);
+    Task<LoginAttemptDto> RefreshSessionAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> LogoutAsync(Guid userId, CancellationToken cancellationToken);
     Task<List<UserDto>> GetUsers(CancellationToken cancellationToken);
     Task<List<UserLookupDto>> GetUserLookup(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);

@@ -41,6 +41,7 @@ import { useAuth } from "@/context/AuthContext"
 import {
   getAssetById,
   getAssetUnitDetail,
+  getAssetUnitImages,
   getUserLookup,
   shortId,
   uploadAssetUnitImages,
@@ -53,15 +54,22 @@ import {
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "")
 
 function resolveAssetImageUrl(imageUrl: string) {
-  if (/^(https?:|data:|blob:)/i.test(imageUrl)) {
-    return imageUrl
+  const normalizedUrl = imageUrl.trim().replaceAll("\\", "/")
+
+  if (/^(data:|blob:)/i.test(normalizedUrl)) {
+    return normalizedUrl
   }
 
-  if (imageUrl.startsWith("/") && apiBaseUrl) {
-    return `${apiBaseUrl}${imageUrl}`
+  if (/^https?:/i.test(normalizedUrl)) {
+    return encodeURI(normalizedUrl)
   }
 
-  return imageUrl
+  if (apiBaseUrl) {
+    const path = normalizedUrl.startsWith("/") ? normalizedUrl : `/${normalizedUrl}`
+    return encodeURI(`${apiBaseUrl}${path}`)
+  }
+
+  return encodeURI(normalizedUrl)
 }
 
 function formatDateTime(value?: string | null) {
@@ -119,14 +127,20 @@ export default function AssetUnitDetailPage() {
     if (!params.id || !params.unitId) return
 
     setLoading(true)
-    Promise.allSettled([getAssetById(params.id), getAssetUnitDetail(params.unitId)]).then(
-      ([assetResult, detailResult]) => {
+    Promise.allSettled([
+      getAssetById(params.id),
+      getAssetUnitDetail(params.unitId),
+      getAssetUnitImages(params.unitId),
+    ]).then(
+      ([assetResult, detailResult, imagesResult]) => {
         if (assetResult.status === "fulfilled") setAsset(assetResult.value)
         if (detailResult.status === "fulfilled") {
           const nextDetail = detailResult.value
-          setDetail(nextDetail)
+          const images = imagesResult.status === "fulfilled" ? imagesResult.value : nextDetail.images
+          const detailWithImages = { ...nextDetail, images }
+          setDetail(detailWithImages)
 
-          getUserLookup(collectUserIds(nextDetail))
+          getUserLookup(collectUserIds(detailWithImages))
             .then((users) => {
               setUserNames(
                 Object.fromEntries(
@@ -446,7 +460,9 @@ export default function AssetUnitDetailPage() {
           </DialogHeader>
           {selectedImage ? (
             <div
+              aria-label={selectedImage.description || selectedImage.fileName || "Asset Unit image"}
               className="h-[min(72vh,720px)] rounded-[16px] border border-border bg-muted bg-contain bg-center bg-no-repeat"
+              role="img"
               style={{
                 backgroundImage: `url("${resolveAssetImageUrl(selectedImage.imageUrl)}")`,
               }}

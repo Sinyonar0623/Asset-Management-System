@@ -165,6 +165,17 @@ public class AssetUnitCommandHandlerService(
         return assetUnit;
     }
 
+    public async Task<List<AssetUnitImageDto>> GetAssetUnitImagesByAssetUnitId(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        if (assetUnitId == Guid.Empty)
+            throw new ArgumentException("Asset unit id is required.", nameof(assetUnitId));
+
+        return await _assetUnitReadRepository.GetAssetUnitImagesByAssetUnitIdAsync(assetUnitId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Asset unit with id {assetUnitId} was not found.");
+    }
+
     public async Task<List<AssetUnitImageDto>> AddAssetUnitImages(
         Guid assetUnitId,
         List<CreateAssetUnitImageDto> images,

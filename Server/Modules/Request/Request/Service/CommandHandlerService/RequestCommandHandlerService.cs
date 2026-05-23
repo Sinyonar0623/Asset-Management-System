@@ -165,7 +165,8 @@ public class RequestCommandHandlerService(
         {
             requests = await _requestReadRepository.GetPaginatedAsync(
                 request,
-                x => x.NextApproverId == userId
+                x => x.RequesterId == userId
+                     || x.NextApproverId == userId
                      || x.Trackings.Any(t =>
                          t.AssignedApproverId == userId
                          || t.ActionByUserId == userId),
@@ -318,7 +319,8 @@ public class RequestCommandHandlerService(
 
         if (normalizedRoleCode is RoleCodes.Teacher or RoleCodes.Hod)
         {
-            return request.NextApproverId == userId
+            return request.RequesterId == userId
+                   || request.NextApproverId == userId
                    || request.Trackings.Any(x =>
                        x.AssignedApproverId == userId
                        || x.ActionByUserId == userId);

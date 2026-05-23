@@ -322,8 +322,8 @@ public class AssetCommandHandlerService(
         {
             asset = await _assetReadRepository.FirstOrDefaultAsync(
                 x => x.Id == assetId
-                     && x.Laboratory != null
-                     && x.Laboratory.TeacherId == userId,
+                     && (EF.Property<Guid?>(x, "LaboratoryId") == null
+                         || (x.Laboratory != null && x.Laboratory.TeacherId == userId)),
                 AssetDtoProjection,
                 cancellationToken);
         }
