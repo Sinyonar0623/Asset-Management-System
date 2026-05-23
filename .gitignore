@@ -57,5 +57,8 @@ next-env.d.ts
 /artifacts/
 Server/Application/Api/wwwroot/uploads/
 
+# local agent instructions/state
+AGENT.md
+AGENTS.md
 .codex/
 .restore.log
