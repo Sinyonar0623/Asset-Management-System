@@ -18,7 +18,12 @@ public class UpdateRequestCommandHandler(
         {
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-            var isSuccess = await _service.UpdateRequest(request.Id, request.Request, cancellationToken);
+            var isSuccess = await _service.UpdateRequest(
+                request.Id,
+                request.Request,
+                request.UserId,
+                request.RoleCode,
+                cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitTransactionAsync(cancellationToken);

@@ -43,6 +43,7 @@ import {
   getAssetsByLaboratory,
   formatDate,
   getRequestById,
+  getUserLookup,
   markRequestProcessed,
   shortId,
   type AssetDto,
@@ -125,6 +126,7 @@ export default function RequestDetailPage() {
   const [request, setRequest] = React.useState<RequestDto | null>(null)
   const [assets, setAssets] = React.useState<AssetDto[]>([])
   const [attachedAssets, setAttachedAssets] = React.useState<AssetDto[]>([])
+  const [actorNameById, setActorNameById] = React.useState<Map<string, string>>(new Map())
   const [previewAsset, setPreviewAsset] = React.useState<AssetDto | null>(null)
   const [previewAssetUnits, setPreviewAssetUnits] = React.useState<AssetUnitDto[]>([])
   const [previewUnitImages, setPreviewUnitImages] = React.useState<AssetUnitImageDto[]>([])
@@ -151,6 +153,38 @@ export default function RequestDetailPage() {
   React.useEffect(() => {
     loadRequest()
   }, [loadRequest])
+
+  React.useEffect(() => {
+    const userIds = Array.from(
+      new Set(
+        [
+          request?.requesterId,
+          ...(request?.trackings ?? []).map((tracking) => tracking.actionByUserId),
+        ]
+          .filter((userId): userId is string => Boolean(userId))
+      )
+    )
+
+    if (userIds.length === 0) {
+      setActorNameById(new Map())
+      return
+    }
+
+    let ignore = false
+
+    getUserLookup(userIds)
+      .then((users) => {
+        if (ignore) return
+        setActorNameById(new Map(users.map((user) => [user.userId.toLowerCase(), user.username])))
+      })
+      .catch(() => {
+        if (!ignore) setActorNameById(new Map())
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [request?.requesterId, request?.trackings])
 
   React.useEffect(() => {
     let isActive = true
@@ -268,12 +302,12 @@ export default function RequestDetailPage() {
   const requestType = request?.requestType?.toUpperCase()
   const isOwnPendingRequest =
     request?.status === "PENDING" && isSameId(request.requesterId, session?.userId)
-  const showActionPanel = !isOwnPendingRequest
+  const showActionPanel = session?.role !== "admin" && !isOwnPendingRequest
   const canAct =
     showActionPanel &&
     request?.status === "PENDING" &&
     Boolean(currentTracking) &&
-    (session?.role === "admin" || currentTracking?.requiredRoleCode === currentUserRole)
+    currentTracking?.requiredRoleCode === currentUserRole
   const teacherNeedsAssets =
     requestType === "BORROW" && currentTracking?.requiredRoleCode === "TEACHER"
   const approvableAssets = assets.filter((asset) => asset.isAvailable !== false)
@@ -284,6 +318,9 @@ export default function RequestDetailPage() {
   const selectedPreviewUnit = previewAssetUnits.find(
     (unit) => unit.id === selectedPreviewUnitId
   )
+  const requesterName = request?.requesterId
+    ? actorNameById.get(request.requesterId.toLowerCase()) ?? shortId(request.requesterId)
+    : "-"
 
   React.useEffect(() => {
     if (!request?.targetLaboratoryId || !teacherNeedsAssets || !canAct) {
@@ -385,7 +422,7 @@ export default function RequestDetailPage() {
             </div>
             <div className="rounded-[16px] border border-border p-4">
               <p className="text-muted-foreground">Requester</p>
-              <p className="mt-2 font-mono text-xs font-semibold">{shortId(request?.requesterId)}</p>
+              <p className="mt-2 font-semibold">{requesterName}</p>
             </div>
             <div className="rounded-[16px] border border-border p-4">
               <p className="text-muted-foreground">Created</p>
@@ -504,7 +541,11 @@ export default function RequestDetailPage() {
           <CardTitle>Approval Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <ApprovalTimeline trackings={request?.trackings ?? []} requestType={request?.requestType} />
+          <ApprovalTimeline
+            trackings={request?.trackings ?? []}
+            requestType={request?.requestType}
+            actorNameById={actorNameById}
+          />
         </CardContent>
       </Card>
 

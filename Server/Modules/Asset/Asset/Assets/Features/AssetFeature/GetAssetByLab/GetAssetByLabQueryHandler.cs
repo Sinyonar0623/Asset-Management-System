@@ -14,6 +14,7 @@ public class GetAssetByLabQueryHandler(IAssetCommandHandlerService service)
             request.PaginationRequest,
             request.UserId,
             request.RoleCode,
+            request.SearchTerm,
             cancellationToken);
 
         return new GetAssetByLabResult(assets);

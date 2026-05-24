@@ -17,6 +17,7 @@ public class GetAssetByLabEndpoint : ICarterModule
             async (
                 Guid laboratoryId,
                 [AsParameters] PaginationRequest request,
+                [FromQuery] string? search,
                 HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -36,7 +37,7 @@ public class GetAssetByLabEndpoint : ICarterModule
                 }
 
                 var result = await sender.Send(
-                    new GetAssetByLabQuery(laboratoryId, request, userId, roleCode),
+                    new GetAssetByLabQuery(laboratoryId, request, userId, roleCode, search),
                     cancellationToken);
                 var response = new GetAssetByLabResponse(result.Assets);
 

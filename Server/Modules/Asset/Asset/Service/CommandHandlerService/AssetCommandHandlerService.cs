@@ -33,6 +33,16 @@ public class AssetCommandHandlerService(
         UpdatedAt = x.UpdateOn ?? x.CreateOn
     };
 
+    private static Expression<Func<Assets.Model.Asset, DateTime>> AssetUpdatedAtOrder => x =>
+        x.UpdateOn ?? x.CreateOn ?? DateTime.MinValue;
+
+    private static string? NormalizeSearchTerm(string? searchTerm)
+    {
+        return string.IsNullOrWhiteSpace(searchTerm)
+            ? null
+            : searchTerm.Trim().ToLowerInvariant();
+    }
+
     public Task<bool> AssignAssetUnits(Assets.Model.Asset asset, List<Guid> units)
     {
         if (asset is null) throw new KeyNotFoundException($"Asset was not found.");
@@ -365,15 +375,26 @@ public class AssetCommandHandlerService(
 
     public async Task<PaginatedResult<AssetDto>> GetAssets(
         PaginationRequest paginationRequest,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
         var pageNumber = Math.Max(0, paginationRequest.PageNumber);
         var pageSize = paginationRequest.PageSize <= 0 ? 10 : paginationRequest.PageSize;
         var request = new PaginationRequest(pageNumber, pageSize);
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         var assets = await _assetReadRepository.GetPaginatedAsync(
             request,
+            x => normalizedSearchTerm == null
+                 || x.Name.ToLower().Contains(normalizedSearchTerm)
+                 || x.Description.ToLower().Contains(normalizedSearchTerm)
+                 || x.Category.ToLower().Contains(normalizedSearchTerm)
+                 || (x.Laboratory != null
+                     && (x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                         || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm))),
+            AssetUpdatedAtOrder,
             AssetDtoProjection,
+            ascending: false,
             cancellationToken);
 
         return await EnrichAssetStatuses(assets, cancellationToken);
@@ -383,22 +404,33 @@ public class AssetCommandHandlerService(
         PaginationRequest paginationRequest,
         Guid userId,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
         var request = NormalizePaginationRequest(paginationRequest);
         var normalizedRoleCode = NormalizeRoleCode(roleCode);
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         if (normalizedRoleCode is RoleCodes.Admin or RoleCodes.Hod)
         {
-            return await GetAssets(request, cancellationToken);
+            return await GetAssets(request, normalizedSearchTerm, cancellationToken);
         }
 
         if (normalizedRoleCode is RoleCodes.Teacher)
         {
             var assets = await _assetReadRepository.GetPaginatedAsync(
                 request,
-                x => x.Laboratory != null && x.Laboratory.TeacherId == userId,
+                x => x.Laboratory != null
+                     && x.Laboratory.TeacherId == userId
+                     && (normalizedSearchTerm == null
+                         || x.Name.ToLower().Contains(normalizedSearchTerm)
+                         || x.Description.ToLower().Contains(normalizedSearchTerm)
+                         || x.Category.ToLower().Contains(normalizedSearchTerm)
+                         || x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                         || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm)),
+                AssetUpdatedAtOrder,
                 AssetDtoProjection,
+                ascending: false,
                 cancellationToken);
 
             return await EnrichAssetStatuses(assets, cancellationToken);
@@ -414,8 +446,17 @@ public class AssetCommandHandlerService(
 
             var assets = await _assetReadRepository.GetPaginatedAsync(
                 request,
-                x => visibleAssetIds.Contains(x.Id),
+                x => visibleAssetIds.Contains(x.Id)
+                     && (normalizedSearchTerm == null
+                         || x.Name.ToLower().Contains(normalizedSearchTerm)
+                         || x.Description.ToLower().Contains(normalizedSearchTerm)
+                         || x.Category.ToLower().Contains(normalizedSearchTerm)
+                         || (x.Laboratory != null
+                             && (x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                                 || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm)))),
+                AssetUpdatedAtOrder,
                 AssetDtoProjection,
+                ascending: false,
                 cancellationToken);
 
             return await EnrichAssetStatuses(assets, cancellationToken);
@@ -427,16 +468,27 @@ public class AssetCommandHandlerService(
     public async Task<PaginatedResult<AssetDto>> GetAssetsByLab(
         Guid laboratoryId,
         PaginationRequest paginationRequest,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
         var pageNumber = Math.Max(0, paginationRequest.PageNumber);
         var pageSize = paginationRequest.PageSize <= 0 ? 10 : paginationRequest.PageSize;
         var request = new PaginationRequest(pageNumber, pageSize);
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         var assets = await _assetReadRepository.GetPaginatedAsync(
             request,
-            x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId,
+            x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId
+                 && (normalizedSearchTerm == null
+                     || x.Name.ToLower().Contains(normalizedSearchTerm)
+                     || x.Description.ToLower().Contains(normalizedSearchTerm)
+                     || x.Category.ToLower().Contains(normalizedSearchTerm)
+                     || (x.Laboratory != null
+                         && (x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                             || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm)))),
+            AssetUpdatedAtOrder,
             AssetDtoProjection,
+            ascending: false,
             cancellationToken);
 
         return await EnrichAssetStatuses(assets, cancellationToken);
@@ -447,14 +499,16 @@ public class AssetCommandHandlerService(
         PaginationRequest paginationRequest,
         Guid userId,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
         var request = NormalizePaginationRequest(paginationRequest);
         var normalizedRoleCode = NormalizeRoleCode(roleCode);
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         if (normalizedRoleCode is RoleCodes.Admin or RoleCodes.Hod)
         {
-            return await GetAssetsByLab(laboratoryId, request, cancellationToken);
+            return await GetAssetsByLab(laboratoryId, request, normalizedSearchTerm, cancellationToken);
         }
 
         if (normalizedRoleCode is RoleCodes.Teacher)
@@ -463,8 +517,16 @@ public class AssetCommandHandlerService(
                 request,
                 x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId
                      && x.Laboratory != null
-                     && x.Laboratory.TeacherId == userId,
+                     && x.Laboratory.TeacherId == userId
+                     && (normalizedSearchTerm == null
+                         || x.Name.ToLower().Contains(normalizedSearchTerm)
+                         || x.Description.ToLower().Contains(normalizedSearchTerm)
+                         || x.Category.ToLower().Contains(normalizedSearchTerm)
+                         || x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                         || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm)),
+                AssetUpdatedAtOrder,
                 AssetDtoProjection,
+                ascending: false,
                 cancellationToken);
 
             return await EnrichAssetStatuses(assets, cancellationToken);
@@ -481,8 +543,17 @@ public class AssetCommandHandlerService(
             var assets = await _assetReadRepository.GetPaginatedAsync(
                 request,
                 x => EF.Property<Guid?>(x, "LaboratoryId") == laboratoryId
-                     && visibleAssetIds.Contains(x.Id),
+                     && visibleAssetIds.Contains(x.Id)
+                     && (normalizedSearchTerm == null
+                         || x.Name.ToLower().Contains(normalizedSearchTerm)
+                         || x.Description.ToLower().Contains(normalizedSearchTerm)
+                         || x.Category.ToLower().Contains(normalizedSearchTerm)
+                         || (x.Laboratory != null
+                             && (x.Laboratory.RoomNo.ToLower().Contains(normalizedSearchTerm)
+                                 || x.Laboratory.LaboratoryName.ToLower().Contains(normalizedSearchTerm)))),
+                AssetUpdatedAtOrder,
                 AssetDtoProjection,
+                ascending: false,
                 cancellationToken);
 
             return await EnrichAssetStatuses(assets, cancellationToken);
@@ -494,10 +565,12 @@ public class AssetCommandHandlerService(
     public async Task<PaginatedResult<AssetDto>> GetAllocatableAssets(
         PaginationRequest paginationRequest,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
         var request = NormalizePaginationRequest(paginationRequest);
         var normalizedRoleCode = NormalizeRoleCode(roleCode);
+        var normalizedSearchTerm = NormalizeSearchTerm(searchTerm);
 
         if (normalizedRoleCode is not (RoleCodes.Admin or RoleCodes.Hod or RoleCodes.Teacher))
         {
@@ -506,8 +579,14 @@ public class AssetCommandHandlerService(
 
         var assets = await _assetReadRepository.GetPaginatedAsync(
             request,
-            x => EF.Property<Guid?>(x, "LaboratoryId") == null,
+            x => EF.Property<Guid?>(x, "LaboratoryId") == null
+                 && (normalizedSearchTerm == null
+                     || x.Name.ToLower().Contains(normalizedSearchTerm)
+                     || x.Description.ToLower().Contains(normalizedSearchTerm)
+                     || x.Category.ToLower().Contains(normalizedSearchTerm)),
+            AssetUpdatedAtOrder,
             AssetDtoProjection,
+            ascending: false,
             cancellationToken);
 
         return await EnrichAssetStatuses(assets, cancellationToken);

@@ -192,9 +192,9 @@ export type MarkProcessedPayload = {
   assetIds?: string[]
 }
 
-export async function getAssets(pageNumber = 0, pageSize = 10) {
+export async function getAssets(pageNumber = 0, pageSize = 10, search?: string) {
   const { data } = await api.get<{ assets: PaginatedResult<AssetDto> }>("/Asset", {
-    params: { pageNumber, pageSize },
+    params: { pageNumber, pageSize, search: search?.trim() || undefined },
   })
   return data.assets
 }
@@ -202,20 +202,21 @@ export async function getAssets(pageNumber = 0, pageSize = 10) {
 export async function getAssetsByLaboratory(
   laboratoryId: string,
   pageNumber = 0,
-  pageSize = 50
+  pageSize = 50,
+  search?: string
 ) {
   const { data } = await api.get<{ assets: PaginatedResult<AssetDto> }>(
     `/Asset/laboratory/${laboratoryId}`,
     {
-      params: { pageNumber, pageSize },
+      params: { pageNumber, pageSize, search: search?.trim() || undefined },
     }
   )
   return data.assets
 }
 
-export async function getAllocatableAssets(pageNumber = 0, pageSize = 50) {
+export async function getAllocatableAssets(pageNumber = 0, pageSize = 50, search?: string) {
   const { data } = await api.get<{ assets: PaginatedResult<AssetDto> }>("/Asset/allocatable", {
-    params: { pageNumber, pageSize },
+    params: { pageNumber, pageSize, search: search?.trim() || undefined },
   })
   return data.assets
 }
@@ -440,7 +441,7 @@ export async function updateUserRole(userId: string, roleCode: string) {
 }
 
 export function formatDate(value?: string | null) {
-  if (!value) return "Requires API"
+  if (!value) return "-"
   return new Intl.DateTimeFormat("en", {
     year: "numeric",
     month: "short",

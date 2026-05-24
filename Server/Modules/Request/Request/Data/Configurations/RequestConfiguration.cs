@@ -71,7 +71,7 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request.Requests.Mo
             tracking.HasIndex("RequestId", nameof(RequestTracking.StepNo)).IsUnique();
             tracking.HasIndex("RequestId")
                 .HasFilter("\"IsCurrent\" = TRUE")
-                .IsUnique();
+                .HasDatabaseName("IX_RequestTrackings_RequestId");
             tracking.HasIndex(nameof(RequestTracking.AssignedApproverId), nameof(RequestTracking.Status));
         });
 

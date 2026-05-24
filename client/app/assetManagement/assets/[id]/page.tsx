@@ -306,7 +306,7 @@ export default function AssetDetailPage() {
                 <BoxIcon className="size-6" />
               </div>
               <div>
-                <p className="text-lg font-semibold">{asset?.name || "Requires API"}</p>
+                <p className="text-lg font-semibold">{asset?.name || "-"}</p>
                 <p className="text-sm text-muted-foreground">{asset?.description || "No description"}</p>
               </div>
             </div>

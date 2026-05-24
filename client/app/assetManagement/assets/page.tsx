@@ -9,6 +9,7 @@ import Link from "next/link"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  XIcon,
   FilterIcon,
   PlusIcon,
   RotateCcwIcon,
@@ -39,6 +40,7 @@ export default function AssetListPage() {
   const { session } = useAuth()
   const [assets, setAssets] = React.useState<AssetDto[]>([])
   const [search, setSearch] = React.useState("")
+  const [searchQuery, setSearchQuery] = React.useState("")
   const [pageNumber, setPageNumber] = React.useState(0)
   const [totalCount, setTotalCount] = React.useState(0)
   const [isLoading, setLoading] = React.useState(true)
@@ -48,13 +50,13 @@ export default function AssetListPage() {
 
   const loadAssets = React.useCallback(() => {
     setLoading(true)
-    getAssets(pageNumber, PAGE_SIZE)
+    getAssets(pageNumber, PAGE_SIZE, searchQuery)
       .then((result) => {
         setAssets(result.items)
         setTotalCount(result.count)
       })
       .finally(() => setLoading(false))
-  }, [pageNumber])
+  }, [pageNumber, searchQuery])
 
   React.useEffect(() => {
     loadAssets()
@@ -81,11 +83,19 @@ export default function AssetListPage() {
     return asset.availabilityStatus || (asset.isAvailable ? "AVAILABLE" : "UNAVAILABLE")
   }
 
-  const visibleAssets = assets.filter((asset) => {
-    const target =
-      `${asset.name} ${asset.description} ${asset.location ?? ""}`.toLowerCase()
-    return target.includes(search.toLowerCase())
-  })
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setPageNumber(0)
+    setSearchQuery(search.trim())
+  }
+
+  function handleClearSearch() {
+    setSearch("")
+    setPageNumber(0)
+    setSearchQuery("")
+  }
+
+  const visibleAssets = assets
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
   const pageStart = totalCount === 0 ? 0 : pageNumber * PAGE_SIZE + 1
   const pageEnd = Math.min(pageNumber * PAGE_SIZE + assets.length, totalCount)
@@ -95,15 +105,27 @@ export default function AssetListPage() {
       <PageHeader title="Assets" subtitle="Browse and inspect department-managed assets." />
 
       <div className="flex items-center justify-between gap-4">
-        <div className="relative w-[360px]">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="pl-9"
-            placeholder="Search assets"
-          />
-        </div>
+        <form className="flex items-center gap-2" onSubmit={handleSearchSubmit}>
+          <div className="relative w-[360px]">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="pl-9"
+              placeholder="Search assets"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            <SearchIcon className="size-4" />
+            Search
+          </Button>
+          {searchQuery && (
+            <Button type="button" variant="ghost" onClick={handleClearSearch}>
+              <XIcon className="size-4" />
+              Clear
+            </Button>
+          )}
+        </form>
         <div className="flex items-center gap-3">
           <Button variant="outline">
             <FilterIcon className="size-4" />

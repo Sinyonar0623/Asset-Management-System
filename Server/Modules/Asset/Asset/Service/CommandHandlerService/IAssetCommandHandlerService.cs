@@ -17,22 +17,25 @@ public interface IAssetCommandHandlerService
     Task<AssetDto> GetVisibleAssetById(Guid assetId, Guid userId, string roleCode, CancellationToken cancellationToken);
     Task<bool> UpdateAsset(Guid assetId, AssetDto asset, CancellationToken cancellationToken);
     Task<bool> DeleteAsset(Guid assetId, CancellationToken cancellationToken);
-    Task<PaginatedResult<AssetDto>> GetAssets(PaginationRequest paginationRequest, CancellationToken cancellationToken = default);
+    Task<PaginatedResult<AssetDto>> GetAssets(PaginationRequest paginationRequest, string? searchTerm = null, CancellationToken cancellationToken = default);
     Task<PaginatedResult<AssetDto>> GetVisibleAssets(
         PaginationRequest paginationRequest,
         Guid userId,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default);
-    Task<PaginatedResult<AssetDto>> GetAssetsByLab(Guid laboratoryId, PaginationRequest paginationRequest, CancellationToken cancellationToken = default);
+    Task<PaginatedResult<AssetDto>> GetAssetsByLab(Guid laboratoryId, PaginationRequest paginationRequest, string? searchTerm = null, CancellationToken cancellationToken = default);
     Task<PaginatedResult<AssetDto>> GetVisibleAssetsByLab(
         Guid laboratoryId,
         PaginationRequest paginationRequest,
         Guid userId,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default);
     Task<PaginatedResult<AssetDto>> GetAllocatableAssets(
         PaginationRequest paginationRequest,
         string roleCode,
+        string? searchTerm = null,
         CancellationToken cancellationToken = default);
     Task<long> GetAssetCount(CancellationToken cancellationToken = default);
     Task<long> GetVisibleAssetCount(Guid userId, string roleCode, CancellationToken cancellationToken = default);

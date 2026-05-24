@@ -154,22 +154,11 @@ public class RequestCommandHandlerService(
 
         PaginatedResult<Requests.Model.Request> requests;
 
-        if (normalizedRoleCode is RoleCodes.Student)
+        if (normalizedRoleCode is RoleCodes.Student or RoleCodes.Teacher or RoleCodes.Hod)
         {
             requests = await _requestReadRepository.GetPaginatedAsync(
                 request,
                 x => x.RequesterId == userId,
-                cancellationToken);
-        }
-        else if (normalizedRoleCode is RoleCodes.Teacher or RoleCodes.Hod)
-        {
-            requests = await _requestReadRepository.GetPaginatedAsync(
-                request,
-                x => x.RequesterId == userId
-                     || x.NextApproverId == userId
-                     || x.Trackings.Any(t =>
-                         t.AssignedApproverId == userId
-                         || t.ActionByUserId == userId),
                 cancellationToken);
         }
         else
@@ -186,12 +175,28 @@ public class RequestCommandHandlerService(
             requests.PageSize);
     }
 
-    public async Task<bool> UpdateRequest(Guid requestId, UpdateRequestDto request, CancellationToken cancellationToken)
+    public async Task<bool> UpdateRequest(
+        Guid requestId,
+        UpdateRequestDto request,
+        Guid userId,
+        string roleCode,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var currentRequest = await _requestWriteRepository.GetByIdAsync(requestId, cancellationToken)
             ?? throw new KeyNotFoundException($"Request with id {requestId} was not found.");
+
+        var normalizedRoleCode = NormalizeRoleCode(roleCode);
+        if (normalizedRoleCode is RoleCodes.Admin)
+        {
+            throw new UnauthorizedAccessException("Admins are not allowed to edit requests.");
+        }
+
+        if (currentRequest.RequesterId != userId)
+        {
+            throw new UnauthorizedAccessException("You can edit only your own requests.");
+        }
 
         if (string.IsNullOrWhiteSpace(request.RequestType))
         {
@@ -312,18 +317,9 @@ public class RequestCommandHandlerService(
             return true;
         }
 
-        if (normalizedRoleCode is RoleCodes.Student)
+        if (normalizedRoleCode is RoleCodes.Student or RoleCodes.Teacher or RoleCodes.Hod)
         {
             return request.RequesterId == userId;
-        }
-
-        if (normalizedRoleCode is RoleCodes.Teacher or RoleCodes.Hod)
-        {
-            return request.RequesterId == userId
-                   || request.NextApproverId == userId
-                   || request.Trackings.Any(x =>
-                       x.AssignedApproverId == userId
-                       || x.ActionByUserId == userId);
         }
 
         return false;
@@ -458,16 +454,18 @@ public class RequestCommandHandlerService(
             .FirstOrDefault(x => x.StepNo == request.CurrentStepNo.Value)
             ?? throw new InvalidOperationException($"Current tracking step {request.CurrentStepNo.Value} was not found.");
         var approverIsAdmin = string.Equals(approverRoleCode, RoleCodes.Admin, StringComparison.OrdinalIgnoreCase);
+        if (approverIsAdmin)
+        {
+            throw new UnauthorizedAccessException("Admins can view requests but cannot process approval steps.");
+        }
 
-        if (!approverIsAdmin
-            && currentStep.AssignedApproverId.HasValue
+        if (currentStep.AssignedApproverId.HasValue
             && currentStep.AssignedApproverId.Value != approverId)
         {
             throw new UnauthorizedAccessException("You are not the assigned approver for this step.");
         }
 
-        if (!approverIsAdmin
-            && !string.Equals(currentStep.RequiredRoleCode, approverRoleCode, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(currentStep.RequiredRoleCode, approverRoleCode, StringComparison.OrdinalIgnoreCase))
         {
             throw new UnauthorizedAccessException("Your role is not allowed to process this step.");
         }

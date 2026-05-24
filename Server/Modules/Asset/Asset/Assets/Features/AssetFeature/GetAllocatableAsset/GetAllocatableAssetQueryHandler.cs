@@ -14,6 +14,7 @@ public class GetAllocatableAssetQueryHandler(IAssetCommandHandlerService service
         var assets = await _service.GetAllocatableAssets(
             request.PaginationRequest,
             request.RoleCode,
+            request.SearchTerm,
             cancellationToken);
 
         return new GetAllocatableAssetResult(assets);

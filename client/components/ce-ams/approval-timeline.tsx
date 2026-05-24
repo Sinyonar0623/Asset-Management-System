@@ -35,9 +35,11 @@ function getStepTitle(tracking: RequestTrackingDto, requestType?: string | null)
 export function ApprovalTimeline({
   trackings,
   requestType,
+  actorNameById,
 }: {
   trackings: RequestTrackingDto[]
   requestType?: string | null
+  actorNameById?: Map<string, string>
 }) {
   if (trackings.length === 0) {
     return (
@@ -54,6 +56,9 @@ export function ApprovalTimeline({
       {sortedTrackings.map((tracking, index) => {
         const status = tracking.status ?? "WAITING"
         const normalized = status.toUpperCase()
+        const actorName = tracking.actionByUserId
+          ? actorNameById?.get(tracking.actionByUserId.toLowerCase()) ?? tracking.actionByUserId.slice(0, 8)
+          : "Waiting for action"
 
         return (
           <div key={`${tracking.stepNo}-${tracking.requiredRoleCode}`} className="relative">
@@ -88,7 +93,7 @@ export function ApprovalTimeline({
                 </div>
                 <RoleBadge role={tracking.requiredRoleCode} />
                 <div className="space-y-1 text-xs font-medium text-muted-foreground">
-                  <p>Actor: {tracking.actionByUserId?.slice(0, 8) ?? "Waiting for action"}</p>
+                  <p>Actor: {actorName}</p>
                   <p>Action: {tracking.actionOn ? formatDate(tracking.actionOn) : "Not actioned yet"}</p>
                 </div>
                 {tracking.comment && (

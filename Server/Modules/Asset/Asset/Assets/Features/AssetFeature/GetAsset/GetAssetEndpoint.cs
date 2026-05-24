@@ -15,6 +15,7 @@ public class GetAssetEndpoint : ICarterModule
     {
         app.MapGet("/Asset", async (
                 [AsParameters] PaginationRequest request,
+                [FromQuery] string? search,
                 HttpContext httpContext,
                 ISender sender,
                 CancellationToken cancellationToken) =>
@@ -33,7 +34,7 @@ public class GetAssetEndpoint : ICarterModule
                     return Results.Unauthorized();
                 }
 
-                var result = await sender.Send(new GetAssetQuery(request, userId, roleCode), cancellationToken);
+                var result = await sender.Send(new GetAssetQuery(request, userId, roleCode, search), cancellationToken);
                 var response = new GetAssetResponse(result.Assets);
 
                 return Results.Ok(response);

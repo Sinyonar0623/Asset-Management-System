@@ -236,7 +236,6 @@ namespace Request.Data.Migrations
                             b1.HasKey("Id");
 
                             b1.HasIndex("RequestId")
-                                .IsUnique()
                                 .HasFilter("\"IsCurrent\" = TRUE");
 
                             b1.HasIndex("AssignedApproverId", "Status");

@@ -204,8 +204,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-4 gap-7">
         <KpiCard
           title="Total Assets"
-          value={assetCount ?? (isLoading ? "..." : "Requires API")}
-          description="From GET /Asset/count"
+          value={assetCount ?? (isLoading ? "..." : "-")}
+          description="Current request page"
           icon={PackageIcon}
         />
         <KpiCard

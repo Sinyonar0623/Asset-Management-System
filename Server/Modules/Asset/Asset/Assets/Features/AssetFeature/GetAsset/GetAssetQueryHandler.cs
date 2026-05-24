@@ -11,6 +11,7 @@ public class GetAssetQueryHandler(IAssetCommandHandlerService service) : IQueryH
             request.PaginationRequest,
             request.UserId,
             request.RoleCode,
+            request.SearchTerm,
             cancellationToken);
 
         return new GetAssetResult(assets);

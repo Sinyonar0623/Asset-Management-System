@@ -10,7 +10,6 @@ import * as React from "react"
 import Link from "next/link"
 import { SearchIcon } from "lucide-react"
 
-import { ApiNotice } from "@/components/ce-ams/api-notice"
 import { CreateRequestDialog } from "@/components/ce-ams/create-request-dialog"
 import { DataTableShell, TableEmptyState } from "@/components/ce-ams/data-table-shell"
 import { PageHeader } from "@/components/ce-ams/page-header"
@@ -34,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAuth } from "@/context/AuthContext"
-import { formatDate, getRequests, shortId, type RequestDto } from "@/lib/ce-ams-api"
+import { formatDate, getRequests, getUserLookup, shortId, type RequestDto } from "@/lib/ce-ams-api"
 
 const statuses = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED", "COMPLETED"]
 const roles = ["ALL", "STUDENT", "TEACHER", "HOD"]
@@ -45,6 +44,7 @@ export default function RequestListPage() {
   const [search, setSearch] = React.useState("")
   const [status, setStatus] = React.useState("PENDING")
   const [role, setRole] = React.useState("ALL")
+  const [requesterNameById, setRequesterNameById] = React.useState<Map<string, string>>(new Map())
   const [isLoading, setLoading] = React.useState(true)
   const canCreateRequest = session?.role !== "admin"
 
@@ -59,9 +59,34 @@ export default function RequestListPage() {
     loadRequests()
   }, [loadRequests])
 
+  React.useEffect(() => {
+    const requesterIds = Array.from(new Set(requests.map((request) => request.requesterId).filter(Boolean)))
+
+    if (requesterIds.length === 0) {
+      setRequesterNameById(new Map())
+      return
+    }
+
+    let ignore = false
+
+    getUserLookup(requesterIds)
+      .then((users) => {
+        if (ignore) return
+        setRequesterNameById(new Map(users.map((user) => [user.userId.toLowerCase(), user.username])))
+      })
+      .catch(() => {
+        if (!ignore) setRequesterNameById(new Map())
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [requests])
+
   const visibleRequests = requests.filter((request) => {
     const currentTracking = request.trackings.find((item) => item.isCurrent)
-    const text = `${request.id} ${request.requestType} ${request.reason} ${request.requesterId}`.toLowerCase()
+    const requesterName = requesterNameById.get(request.requesterId.toLowerCase()) ?? ""
+    const text = `${request.id} ${request.requestType} ${request.reason} ${request.requesterId} ${requesterName}`.toLowerCase()
     const matchesSearch = text.includes(search.toLowerCase())
     const matchesStatus = status === "ALL" || request.status === status
     const matchesRole = role === "ALL" || currentTracking?.requiredRoleCode === role
@@ -114,15 +139,15 @@ export default function RequestListPage() {
         </div>
       </div>
 
-      <ApiNotice title="Request display API gap">
+      {/* <ApiNotice title="Request display API gap">
         The request list API returns requester IDs and asset IDs, but not display names or asset titles. A ticket has been created for the missing table fields.
-      </ApiNotice>
+      </ApiNotice> */}
 
       <DataTableShell>
         {visibleRequests.length === 0 ? (
           <TableEmptyState
             title={isLoading ? "Loading requests" : "No requests found"}
-            description="Requests returned by GET /Request will appear in this table."
+            description=""
           />
         ) : (
           <Table>
@@ -141,17 +166,19 @@ export default function RequestListPage() {
             <TableBody>
               {visibleRequests.map((request) => {
                 const currentTracking = request.trackings.find((item) => item.isCurrent)
+                const requesterName =
+                  requesterNameById.get(request.requesterId.toLowerCase()) ?? shortId(request.requesterId)
 
                 return (
                   <TableRow key={request.id}>
                     <TableCell className="font-semibold">{shortId(request.id)}</TableCell>
-                    <TableCell className="font-mono text-xs">{shortId(request.requesterId)}</TableCell>
+                    <TableCell className="font-medium">{requesterName}</TableCell>
                     <TableCell>
                       {request.items.length > 0
                         ? request.items.map((item) => shortId(item.assetId)).join(", ")
-                        : "Requires API"}
+                        : "-"}
                     </TableCell>
-                    <TableCell>{request.items.length || "Requires API"}</TableCell>
+                    <TableCell>{request.items.length || "-"}</TableCell>
                     <TableCell>
                       <StatusBadge status={request.status} />
                     </TableCell>

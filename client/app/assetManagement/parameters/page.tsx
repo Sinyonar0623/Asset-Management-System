@@ -122,7 +122,7 @@ export default function ParameterListPage() {
                       {parameter.active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">Requires API</TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" disabled>
                       Edit

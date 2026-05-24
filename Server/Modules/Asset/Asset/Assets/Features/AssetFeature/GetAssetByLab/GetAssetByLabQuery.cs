@@ -6,4 +6,5 @@ public record GetAssetByLabQuery(
     Guid LaboratoryId,
     PaginationRequest PaginationRequest,
     Guid UserId,
-    string RoleCode) : IQuery<GetAssetByLabResult>;
+    string RoleCode,
+    string? SearchTerm) : IQuery<GetAssetByLabResult>;

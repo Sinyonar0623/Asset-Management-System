@@ -19,7 +19,12 @@ public interface IRequestCommandHandlerService
         Guid userId,
         string roleCode,
         CancellationToken cancellationToken = default);
-    Task<bool> UpdateRequest(Guid requestId, UpdateRequestDto request, CancellationToken cancellationToken);
+    Task<bool> UpdateRequest(
+        Guid requestId,
+        UpdateRequestDto request,
+        Guid userId,
+        string roleCode,
+        CancellationToken cancellationToken);
     Task<bool> DeleteRequest(Guid requestId, CancellationToken cancellationToken);
     Task<bool> MarkRequestProcessed(
         Guid requestId,

@@ -27,7 +27,15 @@ public sealed class MarkProcessedEndpoint : ICarterModule
                 request.Comment,
                 request.AssetIds ?? []);
 
-            var result = await sender.Send(command, cancellationToken);
+            MarkProcessedResult result;
+            try
+            {
+                result = await sender.Send(command, cancellationToken);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Results.Forbid();
+            }
 
             var response = new MarkProcessedResponse(result.IsSuccess);
 
@@ -36,6 +44,7 @@ public sealed class MarkProcessedEndpoint : ICarterModule
         .WithName("MarkProcessed")
         .Produces<MarkProcessedResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Approve or reject current approval step")
         .RequireAuthorization();

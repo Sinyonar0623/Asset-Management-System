@@ -15,6 +15,7 @@ public class GetAllocatableAssetEndpoint : ICarterModule
         app.MapGet("/Asset/allocatable",
                 async (
                     [AsParameters] PaginationRequest request,
+                    [FromQuery] string? search,
                     HttpContext httpContext,
                     ISender sender,
                     CancellationToken cancellationToken) =>
@@ -25,7 +26,7 @@ public class GetAllocatableAssetEndpoint : ICarterModule
                         return Results.Unauthorized();
                     }
 
-                    var result = await sender.Send(new GetAllocatableAssetQuery(request, roleCode), cancellationToken);
+                    var result = await sender.Send(new GetAllocatableAssetQuery(request, roleCode, search), cancellationToken);
                     var response = new GetAllocatableAssetResponse(result.Assets);
 
                     return Results.Ok(response);
