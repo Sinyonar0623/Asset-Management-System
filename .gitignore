@@ -5,9 +5,23 @@
 **/node_modules/
 /.pnp
 .pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.npm/
+.pnpm-store/
 
 # testing
 /coverage
+**/coverage/
+TestResults/
+**/TestResults/
+*.coverage
+*.coveragexml
+*.trx
 
 # next.js
 /.next/
@@ -15,18 +29,28 @@
 **/.next/
 **/out/
 **/.turbo/
+.swc/
 
 # production
 /build
 
 # misc
 .DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 *.pem
+*.tmp
+*.temp
+*.bak
+*.orig
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
+*.log
 
 # local env files
 .env*.local
@@ -44,6 +68,7 @@ next-env.d.ts
 
 # .NET
 .vs/
+.idea/
 **/bin/
 **/obj/
 *.user
@@ -52,13 +77,24 @@ next-env.d.ts
 *.sln.docstates
 *.rsuser
 *.sln.iml
+*.DotSettings.user
+*.nupkg
+*.snupkg
+project.lock.json
 
 # local build artifacts
 /artifacts/
 Server/Application/Api/wwwroot/uploads/
+Server/Application/Api/logs/
+Server/Application/Api/Logs/
+/tmp.md
+/tmp/
+/temp/
 
 # local agent instructions/state
 AGENT.md
 AGENTS.md
 .codex/
 .restore.log
+
+.scripts/
