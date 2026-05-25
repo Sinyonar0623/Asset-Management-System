@@ -1,6 +1,8 @@
 # CE-AMS
 
-CE-AMS (Computer Engineering Asset Management System) คือระบบจัดการครุภัณฑ์สำหรับภาควิชาวิศวกรรมคอมพิวเตอร์ ใช้สำหรับเก็บข้อมูลทรัพย์สิน ยืม-คืน ติดตามสถานะ และจัดการคำขอผ่าน workflow การอนุมัติ
+CE-AMS (Computer Engineering Asset Management System) คือระบบจัดการครุภัณฑ์สำหรับภาควิชาวิศวกรรมคอมพิวเตอร์ ระบบนี้ช่วยให้หน่วยงานเก็บข้อมูลทรัพย์สิน ติดตามสถานะของครุภัณฑ์ จัดการห้องปฏิบัติการ และควบคุมคำขอใช้งานผ่านขั้นตอนการอนุมัติ
+
+ระบบถูกออกแบบให้รองรับการทำงานของผู้ดูแลระบบ อาจารย์ หัวหน้าภาค และผู้ใช้งานที่เกี่ยวข้องกับครุภัณฑ์ โดยรวมข้อมูล asset, asset unit, laboratory, parameter และ request workflow ไว้ในระบบเดียวกัน
 
 ## เราทำอะไรในระบบนี้
 
@@ -35,7 +37,7 @@ CE-AMS (Computer Engineering Asset Management System) คือระบบจ�
 |   |   |-- Parameter/           # System parameters
 |   |   |-- Request/             # Borrow/allocate/repair/retire requests
 |   |-- Shared/                  # CQRS, DDD, EF, messaging helpers
-|-- scripts/                    # EF migration helper scripts
+|-- scripts/                    # Helper scripts for migrations and seed data
 |-- docker-compose.yml          # PostgreSQL + RabbitMQ
 ```
 
@@ -81,13 +83,13 @@ dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Pa
 
 ### 4. Apply database migrations
 
-ใช้ helper script:
+ใช้ helper script เพื่อ update ทุก context:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Action update -Context all -NoBuild
 ```
 
-หรือรัน EF Core แยก context:
+หรือรัน EF Core แยกตาม context:
 
 ```powershell
 dotnet ef database update --project Server/Modules/Auth/Auth/Auth.csproj --startup-project Server/Application/Api/Api.csproj --context Auth.Data.AuthDbContext
@@ -132,36 +134,52 @@ $env:NEXT_PUBLIC_API_URL="http://localhost:5176"
 npm run dev
 ```
 
-## คำสั่งที่ใช้บ่อย
+## Scripts
 
-Backend:
+คำสั่งหลักที่ใช้บ่อยระหว่างพัฒนา:
 
 ```powershell
+# Start PostgreSQL และ RabbitMQ
+docker compose up -d
+
+# Restore และ build backend
 dotnet restore Server.sln
 dotnet build Server.sln
-dotnet run --project Server/Application/Api/Api.csproj
-```
 
-Frontend:
-
-```powershell
-cd client
-npm run dev
-npm run build
-npm run lint
-```
-
-Infrastructure:
-
-```powershell
-docker compose up -d
-docker compose down
-```
-
-Migrations:
-
-```powershell
+# Apply migrations ทุก context
 powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Action update -Context all -NoBuild
+
+# Run backend API
+dotnet run --project Server/Application/Api/Api.csproj
+
+# Run frontend
+cd client
+npm install
+npm run dev
+```
+
+Helper scripts ที่มีใน repo:
+
+| Script | ใช้ทำอะไร |
+| --- | --- |
+| `scripts/ef-migrations.ps1` | เพิ่ม, ลบ, list หรือ update EF Core migrations ของแต่ละ module |
+| `scripts/create-users.ps1` | สร้างข้อมูลผู้ใช้ตัวอย่างผ่าน API |
+| `scripts/create-assets.ps1` | สร้างข้อมูล asset และ asset unit ตัวอย่างผ่าน API |
+
+ตัวอย่างการใช้ helper scripts:
+
+```powershell
+# เปิดเมนูจัดการ migration
+powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Menu
+
+# สร้าง migration และ update database เฉพาะ asset context
+powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Action add-update -Context asset -MigrationName AddAssetFields
+
+# Seed users หลังจาก backend รันแล้ว
+powershell -ExecutionPolicy Bypass -File scripts/create-users.ps1
+
+# Seed assets หลังจาก backend รันแล้ว
+powershell -ExecutionPolicy Bypass -File scripts/create-assets.ps1
 ```
 
 ## หมายเหตุสำหรับการพัฒนา
