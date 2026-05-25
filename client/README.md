@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CE-AMS Frontend
 
-## Getting Started
+ส่วนนี้คือ frontend ของ CE-AMS (Computer Engineering Asset Management System) สำหรับให้ผู้ใช้ทำงานกับระบบจัดการครุภัณฑ์ผ่านหน้าเว็บ เช่น เข้าสู่ระบบ ดูข้อมูลทรัพย์สิน จัดการ asset unit และติดตามคำขอที่เกี่ยวข้องกับการยืม จัดสรร ซ่อม หรือปลดระวางครุภัณฑ์
 
-First, run the development server:
+Frontend พัฒนาด้วย Next.js, React และ TypeScript โดยเชื่อมต่อกับ backend API ในโฟลเดอร์ `Server/Application/Api/`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## หน้าที่หลัก
+
+- แสดงข้อมูลและสถานะของครุภัณฑ์
+- รองรับการเข้าสู่ระบบและการทำงานตามบทบาทผู้ใช้
+- ใช้สำหรับสร้างและติดตาม request workflow
+- เชื่อมต่อข้อมูล parameter และ asset จาก backend API
+
+## โครงสร้างสำคัญ
+
+```text
+client/
+|-- app/             # Next.js App Router pages and layouts
+|-- components/      # Shared UI components
+|-- context/         # React context providers
+|-- lib/             # API helpers and utilities
+|-- public/          # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # Run local development server
+npm run build    # Build production frontend
+npm run start    # Start production server after build
+npm run lint     # Run ESLint
+```
