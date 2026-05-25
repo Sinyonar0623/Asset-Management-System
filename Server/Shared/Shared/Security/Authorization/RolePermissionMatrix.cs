@@ -1,26 +1,20 @@
+using Shared.Security;
+
 namespace Shared.Security.Authorization;
 
 public static class RolePermissionMatrix
 {
-    private static class RoleCodes
-    {
-        public const string Admin = "00";
-        public const string DepartmentHead = "01";
-        public const string Lecturer = "02";
-        public const string Student = "03";
-    }
-
     private static readonly IReadOnlyDictionary<string, HashSet<string>> PermissionsByRole =
         new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
         {
             [RoleCodes.Admin] = [.. PermissionCatalog.All],
-            [RoleCodes.DepartmentHead] =
+            [RoleCodes.Hod] =
             [
                 PermissionCatalog.AssetRead,
                 PermissionCatalog.RequestRead,
                 PermissionCatalog.RequestWrite
             ],
-            [RoleCodes.Lecturer] =
+            [RoleCodes.Teacher] =
             [
                 PermissionCatalog.AssetRead,
                 PermissionCatalog.RequestRead,

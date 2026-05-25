@@ -36,12 +36,26 @@ public class RequestTracking
     public void Activate()
     {
         Status = TrackingStatusCodes.Pending;
+        ActionByUserId = null;
+        ActionOn = null;
+        Comment = null;
         IsCurrent = true;
     }
 
     public void Deactivate()
     {
         IsCurrent = false;
+    }
+
+    public bool ReassignApprover(Guid oldApproverId, Guid newApproverId)
+    {
+        if (AssignedApproverId != oldApproverId)
+        {
+            return false;
+        }
+
+        AssignedApproverId = newApproverId;
+        return true;
     }
 
     public void Approve(Guid actionByUserId, string? comment)

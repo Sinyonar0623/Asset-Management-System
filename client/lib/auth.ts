@@ -30,9 +30,10 @@ export interface AuthSession {
 // ─── Permission functions ────────────────────────────────────────────────────
 // All UI guards and route guards call these — single place to change rules
 export const PERMISSIONS = {
-  canViewAssets:   (_role: Role) => true,
-  canAddAsset:     (role: Role) => role === "lecturer" || role === "depthead" || role === "admin",
-  canCreateBorrow: (_role: Role) => true,
+  canViewAssets:   () => true,
+  canAddAsset:     (role: Role) => role === "admin",
+  canReturnAsset:  (role: Role) => role === "student" || role === "lecturer" || role === "depthead" || role === "admin",
+  canCreateBorrow: () => true,
   canCreateRepair: (role: Role) => role === "lecturer" || role === "depthead" || role === "admin",
   canApprove:      (role: Role) => role === "lecturer" || role === "depthead" || role === "admin",
   canApproveAll:   (role: Role) => role === "depthead" || role === "admin",

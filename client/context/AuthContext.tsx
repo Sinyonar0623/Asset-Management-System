@@ -7,9 +7,10 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { useRouter } from "next/navigation";
-import { loginApi, logoutApi, mapRoleCodeToRole } from "../lib/auth-api";
+import { loginApi, logoutApi, mapRoleCodeToRole, refreshSessionApi } from "../lib/auth-api";
 import {
   AuthSession,
   AUTH_SESSION_COOKIE_KEY,
@@ -26,14 +27,30 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const TOKEN_REFRESH_LEAD_MS = 2 * 60 * 1000;
+const TOKEN_REFRESH_CHECK_MS = 30 * 1000;
+const ACTIVE_WINDOW_MS = 30 * 60 * 1000;
+
+function getHomePath(role: AuthSession["role"]) {
+  return role === "student" ? "/assetManagement/requests" : "/assetManagement/dashboard"
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setLoading] = useState(true);
+  const lastActivityAtRef = useRef(Date.now());
+  const isRefreshingRef = useRef(false);
   const router = useRouter();
 
   const clearSessionCookie = useCallback(() => {
     document.cookie = `${AUTH_SESSION_COOKIE_KEY}=; path=/; max-age=0; samesite=lax`;
   }, []);
+
+  const clearLocalSession = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    clearSessionCookie();
+    setSession(null);
+  }, [clearSessionCookie]);
 
   const setSessionCookie = useCallback(
     (expiresAt?: number) => {
@@ -66,8 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed: AuthSession = JSON.parse(raw);
         if (parsed.expiresAt && parsed.expiresAt <= Date.now()) {
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
-          clearSessionCookie();
+          clearLocalSession();
         } else {
           setSession(parsed);
           setSessionCookie(parsed.expiresAt);
@@ -76,12 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearSessionCookie();
       }
     } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      clearSessionCookie();
+      clearLocalSession();
     } finally {
       setLoading(false);
     }
-  }, [clearSessionCookie, setSessionCookie]);
+  }, [clearLocalSession, clearSessionCookie, setSessionCookie]);
 
   const login = useCallback(
     async (usernameOrEmail: string, password: string): Promise<boolean> => {
@@ -106,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
         setSessionCookie(newSession.expiresAt);
         setSession(newSession);
-        router.push("/assetManagement/dashboard");
+        router.push(getHomePath(newSession.role));
         return true;
       } catch {
         return false;
@@ -115,6 +130,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [resolveEmailFromIdentifier, router, setSessionCookie]
   );
 
+  const refreshSession = useCallback(async () => {
+    if (isRefreshingRef.current) return;
+
+    isRefreshingRef.current = true;
+    try {
+      const response = await refreshSessionApi();
+      const role = mapRoleCodeToRole(response.roleCode);
+      const refreshedSession: AuthSession = {
+        userId: response.userId,
+        username: response.username,
+        name: response.username,
+        email: response.email,
+        role,
+        department: "",
+        ownedAssetIds: [],
+        accessToken: response.accessToken,
+        tokenType: response.tokenType,
+        expiresAt: Date.now() + response.expiresIn * 1000,
+      };
+
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(refreshedSession));
+      setSessionCookie(refreshedSession.expiresAt);
+      setSession(refreshedSession);
+    } catch {
+      clearLocalSession();
+      router.push("/login");
+    } finally {
+      isRefreshingRef.current = false;
+    }
+  }, [clearLocalSession, router, setSessionCookie]);
+
   const logout = useCallback(() => {
     const doLogout = async () => {
       try {
@@ -122,15 +168,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Ignore API logout failure and still clear local session.
       } finally {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        clearSessionCookie();
-        setSession(null);
+        clearLocalSession();
         router.push("/login");
       }
     };
 
     void doLogout();
-  }, [clearSessionCookie, router]);
+  }, [clearLocalSession, router]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const markActive = () => {
+      lastActivityAtRef.current = Date.now();
+    };
+
+    const activityEvents = ["pointerdown", "keydown", "scroll", "focus", "visibilitychange"];
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, markActive, { passive: true });
+    });
+
+    return () => {
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, markActive);
+      });
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session?.expiresAt) return;
+
+    const maybeRefreshOrLogout = () => {
+      const now = Date.now();
+      const timeUntilExpiry = session.expiresAt! - now;
+
+      if (timeUntilExpiry > TOKEN_REFRESH_LEAD_MS) return;
+
+      const recentlyActive = now - lastActivityAtRef.current <= ACTIVE_WINDOW_MS;
+      const tabVisible =
+        typeof document === "undefined" || document.visibilityState === "visible";
+
+      if (recentlyActive || tabVisible) {
+        void refreshSession();
+        return;
+      }
+
+      if (timeUntilExpiry <= 0) {
+        logout();
+      }
+    };
+
+    maybeRefreshOrLogout();
+    const intervalId = window.setInterval(maybeRefreshOrLogout, TOKEN_REFRESH_CHECK_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [logout, refreshSession, session?.expiresAt]);
 
   const value = useMemo(
     () => ({ session, isLoading, login, logout }),

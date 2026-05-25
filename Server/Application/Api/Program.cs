@@ -12,6 +12,7 @@ using Shared.Data.Audit;
 using Shared.Data;
 using Shared.Data.Interceptors;
 using Shared.Extensions;
+using Shared.Messaging.Integration.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ var RequestAssembly = typeof(RequestModule).Assembly;
 
 builder.Services.AddCarterWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
 builder.Services.AddMediatRWithAssemblies(assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
+builder.Services.AddMassTransitWithAssemblies(builder.Configuration, assetAssembly, authAssembly, parameterAssembly, RequestAssembly);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentActorProvider, HttpContextCurrentActorProvider>();
 builder.Services.AddScoped<ISaveChangesInterceptor, AuditEntityInterceptors>();
@@ -91,29 +93,38 @@ builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddParameterModule(builder.Configuration);
 builder.Services.AddRequestModule(builder.Configuration);
 
+Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
+builder.WebHost.UseWebRoot("wwwroot");
+
 var app = builder.Build();
 
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (KeyNotFoundException)
-    {
-        if (context.Response.HasStarted)
-        {
-            throw;
-        }
+// app.Use(async (context, next) =>
+// {
+//     try
+//     {
+//         await next();
+//     }
+//     catch (KeyNotFoundException)
+//     {
+//         if (context.Response.HasStarted)
+//         {
+//             throw;
+//         }
 
-        context.Response.Clear();
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
-    }
-});
+//         context.Response.Clear();
+//         context.Response.StatusCode = StatusCodes.Status404NotFound;
+//     }
+// });
 
 app.UseCors("Frontend");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseRequestModule()
+    .UseAuthModule()
+    .UseAssetModule()
+    .UseParameterModule();
 
 app.MapCarter();
 

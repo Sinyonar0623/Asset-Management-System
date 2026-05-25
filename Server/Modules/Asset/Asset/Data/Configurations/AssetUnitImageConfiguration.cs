@@ -11,10 +11,12 @@ public class AssetUnitImageConfiguration : IEntityTypeConfiguration<AssetUnitIma
         builder.ToTable("AssetUnitImages");
 
         builder.HasKey(i => i.Id);
-        builder.Property(i => i.Id).ValueGeneratedOnAdd();
-        builder.Property(i => i.Id).HasColumnName("AssetUnitImageId");
+        builder.Property(i => i.Id)
+            .ValueGeneratedNever()
+            .HasColumnName("AssetUnitImageId");
 
         builder.Property(i => i.ImageUrl).HasMaxLength(1000).IsRequired();
+        builder.Property(i => i.Description).HasMaxLength(1000).IsRequired(false);
         builder.Property(i => i.FileName).HasMaxLength(255).IsRequired(false);
         builder.Property(i => i.ContentType).HasMaxLength(100).IsRequired(false);
         builder.Property(i => i.FileSizeBytes).IsRequired(false);

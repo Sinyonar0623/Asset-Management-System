@@ -37,7 +37,28 @@ public class AssetUnitEventHandlerService(
             if (!AssetUnitStatuses.IsReadyForAssignAsset(unit.AvailabilityStatus, unit.OperationalStatus))
                 throw new KeyNotFoundException($"Asset unit with id was conflict.");
 
+            var fromAvailabilityStatus = unit.AvailabilityStatus;
+            var fromOperationalStatus = unit.OperationalStatus;
+            var fromResponsibleUserId = unit.ResponsibleUserId;
+
+            if (AssetUnitStatuses.IsPendingActivationReady(unit.AvailabilityStatus, unit.OperationalStatus))
+            {
+                unit.ChangeStatuses(
+                    AssetUnitStatuses.Availability.Available,
+                    AssetUnitStatuses.Operational.Ready);
+            }
+
             unit.AssignAsset(asset);
+            unit.AddHistory(
+                "ASSIGN_ASSET",
+                "Asset unit assigned to asset.",
+                Guid.Empty,
+                fromAvailabilityStatus: fromAvailabilityStatus,
+                toAvailabilityStatus: unit.AvailabilityStatus,
+                fromOperationalStatus: fromOperationalStatus,
+                toOperationalStatus: unit.OperationalStatus,
+                fromResponsibleUserId: fromResponsibleUserId,
+                toResponsibleUserId: unit.ResponsibleUserId);
         }
 
         return true;

@@ -18,10 +18,10 @@ export interface LoginApiResponse {
 }
 
 const roleByCode: Record<string, Role> = {
-  "00": "admin",
-  "01": "depthead",
-  "02": "lecturer",
-  "03": "student",
+  ADMIN: "admin",
+  HOD: "depthead",
+  TEACHER: "lecturer",
+  STUDENT: "student",
 };
 
 export function mapRoleCodeToRole(roleCode: string): Role {
@@ -34,6 +34,11 @@ export function mapRoleCodeToRole(roleCode: string): Role {
 
 export async function loginApi(payload: LoginApiRequest): Promise<LoginApiResponse> {
   const { data } = await api.post<LoginApiResponse>("/auth/login", payload);
+  return data;
+}
+
+export async function refreshSessionApi(): Promise<LoginApiResponse> {
+  const { data } = await api.post<LoginApiResponse>("/auth/refresh");
   return data;
 }
 

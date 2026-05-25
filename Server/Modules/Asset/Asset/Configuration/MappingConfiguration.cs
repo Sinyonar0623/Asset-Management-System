@@ -38,11 +38,12 @@ public static class MappingConfiguration
                 src.ToAvailabilityStatus,
                 src.FromOperationalStatus,
                 src.ToOperationalStatus,
-                src.FromOwnerId,
-                src.ToOwnerId,
+                src.FromResponsibleUserId,
+                src.ToResponsibleUserId,
                 src.ApprovedBy,
                 src.ApprovedAt,
-                src.ReferenceNo
+                src.ReferenceNo,
+                src.RequestId
             ));
 
         TypeAdapterConfig<AssetUnitConditionDto, AssetUnitCondition>
@@ -65,7 +66,7 @@ public static class MappingConfiguration
                 src.AvailabilityStatus,
                 src.OperationalStatus,
                 src.Remark,
-                src.OwnerId
+                src.ResponsibleUserId
             ));
 
         TypeAdapterConfig<AssetModel, AssetDto>

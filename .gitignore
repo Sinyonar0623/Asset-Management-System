@@ -55,3 +55,10 @@ next-env.d.ts
 
 # local build artifacts
 /artifacts/
+Server/Application/Api/wwwroot/uploads/
+
+# local agent instructions/state
+AGENT.md
+AGENTS.md
+.codex/
+.restore.log

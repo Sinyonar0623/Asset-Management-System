@@ -9,7 +9,22 @@ public interface IAssetUnitReadRepository : IReadRepository<AssetUnit, Guid>
         Guid assetId,
         CancellationToken cancellationToken = default);
 
+    Task<List<AssetUnitDto>> GetUnassignedAssetUnitsAsync(
+        CancellationToken cancellationToken = default);
+
     Task<AssetUnitDto?> GetAssetUnitDtoByIdAsync(
         Guid assetUnitId,
+        CancellationToken cancellationToken = default);
+
+    Task<AssetUnitDetailDto?> GetAssetUnitDetailDtoByIdAsync(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<AssetUnitImageDto>?> GetAssetUnitImagesByAssetUnitIdAsync(
+        Guid assetUnitId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<AssetHistoryDto>> GetAssetHistoriesByAssetIdAsync(
+        Guid assetId,
         CancellationToken cancellationToken = default);
 }

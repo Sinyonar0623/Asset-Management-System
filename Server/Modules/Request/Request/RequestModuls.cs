@@ -1,11 +1,22 @@
 
 
+using Request.Service.EventHandlerService;
+using Request.Requests.Jobs;
+
 namespace Request;
 
 public static class RequestModule
 {
     public static IServiceCollection AddRequestModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<IRequestReadRepository, RequestReadRepository>();
+        services.AddScoped<IRequestWriteRepository, RequestWriteRepository>();
+        services.AddScoped<IRequestCommandHandlerService, RequestCommandHandlerService>();
+        services.AddScoped<IRequestEventHandlerService, RequestEventHandlerService>();
+        services.AddHostedService<BorrowExpirationHostedService>();
+
+        services.AddScoped<IUnitOfWork<RequestDbContext>, UnitOfWork<RequestDbContext>>();
+
         services.AddDbContext<RequestDbContext>((sp, options) =>
         {
            var saveChangesInterceptors = sp.GetServices<ISaveChangesInterceptor>();

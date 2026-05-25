@@ -29,7 +29,7 @@ public class Asset : Aggregate<Guid>
         string name,
         string description,
         string category,
-        bool isAvailable = false
+        bool isAvailable = true
     )
     {
         return new Asset( name, description, category, isAvailable);

@@ -1,305 +1,93 @@
-# CE-AMS (Computer Engineering Asset Management System)
+# CE-AMS
 
-Web application for department asset management with role-based workflows.
+CE-AMS (Computer Engineering Asset Management System) คือระบบจัดการครุภัณฑ์สำหรับภาควิชาวิศวกรรมคอมพิวเตอร์ ใช้สำหรับเก็บข้อมูลทรัพย์สิน ยืม-คืน ติดตามสถานะ และจัดการคำขอผ่าน workflow การอนุมัติ
 
-This repository contains:
-- Backend: .NET 10 modular monolith (`Server`)
-- Frontend: Next.js (`ClientApp`)
-- Local infrastructure: PostgreSQL + RabbitMQ (`docker-compose.yml`)
+## เราทำอะไรในระบบนี้
 
-## 1) Project Goal
+- ระบบ Login/Logout ด้วย JWT และ role-based access
+- จัดการผู้ใช้ตามบทบาท เช่น Admin, Department Head, Lecturer, Student
+- จัดการข้อมูล Asset, Asset Unit, Laboratory และรูปภาพของ Asset Unit
+- จัดการ Parameter สำหรับค่ากลางของระบบ
+- สร้างคำขอ Borrow, Allocate, Repair และ Retire
+- Workflow อนุมัติคำขอผ่าน Teacher และ HOD
+- Reserve, Mark In Use, Release และ Return asset ผ่าน backend workflow
+- บันทึกประวัติการเปลี่ยนสถานะของ asset unit
+- ใช้ RabbitMQ/MassTransit สำหรับสื่อสารข้าม module เช่น Request ไป Asset
 
-The system targets paperless asset operations:
-- Centralized asset data
-- Request + approval workflows (borrow/repair/retire)
-- Asset status tracking and history
-- Notification-ready architecture via message broker
+## Tech Stack
 
-## 2) Current Implementation Status
+- Frontend: Next.js 16, React 19, TypeScript
+- Backend: .NET 10, Carter, MediatR
+- Database: PostgreSQL + EF Core
+- Messaging: RabbitMQ + MassTransit
+- Local services: Docker Compose
 
-Implemented now:
-- Auth module with API endpoints: signup, login, logout
-- JWT token generation + JWT bearer authentication
-- Duplicate login guard (blocks active concurrent session inside token lifetime)
-- PostgreSQL integration with EF Core migrations for Auth/Asset/Parameter/Request contexts
-
-Partially implemented:
-- Asset domain model + migrations
-- Parameter domain model + migrations
-- Request domain model + migrations
-- RabbitMQ infrastructure wiring (consumers/workflows not complete)
-
-Not implemented yet:
-- Auth `GET /auth/me`
-- Full Asset/Request API workflows
-- Refresh token and token revocation strategy
-- Fine-grained authorization policies per endpoint
-- Updated approval loop when HOD rejects and request must return to lab teacher for reconciliation
-
-Important current frontend note:
-- `ClientApp` still uses mock auth data (`localStorage` + mock users) and is not wired to backend auth endpoints yet.
-
-## 3) Tech Stack
-
-- .NET 10 (`net10.0`)
-- Carter (minimal API modules)
-- MediatR
-- EF Core + PostgreSQL
-- MassTransit + RabbitMQ
-- Next.js 16 + React 19 + TypeScript
-- Docker Compose
-
-## 4) Architecture
-
-### 4.1 High-Level
-
-```mermaid
-flowchart LR
-    U[Frontend Next.js] --> API[API Host<br/>Server/Application/Api]
-    API --> MOD[Modules<br/>Auth Asset Parameter Request]
-    MOD --> DB[(PostgreSQL)]
-    MOD --> MQ[(RabbitMQ)]
-    MOD --> SH[Shared Libraries<br/>CQRS DDD Extensions]
-```
-
-### 4.2 Backend Layout
+## Project Structure
 
 ```text
-Server/
-|-- Application/
-|   |-- Api/                      # Composition root, middleware, auth setup
-|-- Modules/
-|   |-- Auth/                     # Implemented API endpoints
-|   |-- Asset/                    # Domain + migrations (no public API yet)
-|   |-- Parameter/                # Domain + migrations (no public API yet)
-|   |-- Request/                  # Domain + migrations (no public API yet)
-|-- Shared/
-|   |-- Shared/                   # CQRS/DDD/EF common utilities
-|   |-- Shared.Messaging/         # MassTransit shared setup
+.
+|-- client/                     # Next.js frontend
+|-- Server/
+|   |-- Application/Api/         # API host / composition root
+|   |-- Modules/
+|   |   |-- Auth/                # Login, logout, users, roles
+|   |   |-- Asset/               # Assets, asset units, labs, history
+|   |   |-- Parameter/           # System parameters
+|   |   |-- Request/             # Borrow/allocate/repair/retire requests
+|   |-- Shared/                  # CQRS, DDD, EF, messaging helpers
+|-- scripts/                    # EF migration helper scripts
+|-- docker-compose.yml          # PostgreSQL + RabbitMQ
 ```
 
-### 4.3 Request Handling Pattern
+## วิธีรันบนเครื่อง
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant CarterEndpoint
-    participant MediatR
-    participant Handler
-    participant Service
-    participant Repository
-    participant SQL
+### 1. เตรียมเครื่อง
 
-    Client->>CarterEndpoint: HTTP Request
-    CarterEndpoint->>MediatR: Send(Command/Query)
-    MediatR->>Handler: Dispatch
-    Handler->>Service: Domain operation
-    Service->>Repository: Data access
-    Repository->>SQL: EF Core
-    SQL-->>Repository: Result
-    Repository-->>Service: Entity/Data
-    Service-->>Handler: Result
-    Handler-->>CarterEndpoint: Response DTO
-    CarterEndpoint-->>Client: HTTP Response
-```
-
-### 4.4 Auth Flow (Current)
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant LoginEP as /auth/login
-    participant AuthService
-    participant DB
-    participant JWT as JwtTokenGenerator
-
-    Client->>LoginEP: email/password
-    LoginEP->>AuthService: LoginAsync
-    AuthService->>DB: Query user + role
-    AuthService->>AuthService: Verify password hash
-    AuthService->>AuthService: Check active session window
-    alt active session exists
-        AuthService-->>LoginEP: already logged in
-        LoginEP-->>Client: 409 Conflict
-    else login allowed
-        AuthService->>DB: SetSession + SaveChanges
-        AuthService-->>LoginEP: LoginUserDto
-        LoginEP->>JWT: Generate token
-        LoginEP-->>Client: 200 OK + accessToken
-    end
-```
-
-### 4.5 Asset Schema Snapshot (from current migration)
-
-Current main tables in schema `asset`:
-- `Laboratories`
-- `Assets`
-- `AssetUnits`
-- `AssetUnitConditions`
-- `AssetUnitHistories`
-- `OutboxMessages`
-
-Core relationships:
-- `Laboratories (1) -> (many) Assets`
-- `Assets (1) -> (many) AssetUnits`
-- `AssetUnits (1) -> (0..1) AssetUnitConditions`
-- `AssetUnits (1) -> (many) AssetUnitHistories`
-
-### 4.6 Request Approval Policy (Updated)
-
-New business rule:
-- Every request must end with final approval decision by `HOD`.
-
-Primary flow for student request:
-1. Student submits request.
-2. Request goes to lab teacher first.
-3. Lab teacher must assign specific asset unit(s) or approved quantity, then approve/reject.
-4. If teacher approves, request is forwarded to HOD.
-5. HOD gives final approve/reject.
-6. If HOD rejects, request returns to lab teacher for reconciliation:
-   - close as rejected, or
-   - adjust assignment and resubmit to HOD.
-
-Special case:
-- If requester is the lab teacher, teacher step may be skipped and request starts at HOD.
-
-Recommended implementation approach:
-- Use a Request aggregate state machine plus `RequestTracking` step transitions.
-- Do not use Saga for core approval routing in the current modular-monolith scope.
-- Consider Saga/Process Manager only when cross-module asynchronous compensation is required.
-
-## 5) API Endpoints (Current)
-
-Base URL (local default):
-- `http://localhost:5176`
-- `https://localhost:7158`
-
-Currently exposed HTTP endpoints are Auth endpoints only:
-
-### 5.1 Sign Up
-
-- Method: `POST`
-- Path: `/auth/signup/user`
-- Auth required: No
-
-Request:
-```json
-{
-  "username": "ctharawi",
-  "email": "chinnaphon.trw@gmail.com",
-  "password": "123a456X!@.",
-  "roleCode": "00"
-}
-```
-
-Response:
-- `201 Created` with `{"userId":"<guid>"}`
-- `400 Bad Request` with `{"message":"..."}` on validation/business error
-
-### 5.2 Login
-
-- Method: `POST`
-- Path: `/auth/login`
-- Auth required: No
-
-Request:
-```json
-{
-  "email": "chinnaphon.trw@gmail.com",
-  "password": "123a456X!@."
-}
-```
-
-Response:
-- `200 OK`:
-```json
-{
-  "accessToken": "<jwt>",
-  "tokenType": "Bearer",
-  "expiresIn": 900,
-  "userId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "username": "ctharawi",
-  "email": "chinnaphon.trw@gmail.com",
-  "roleCode": "00",
-  "roleName": "ADMIN"
-}
-```
-- `400 Bad Request` when payload is invalid
-- `401 Unauthorized` when email/password is invalid
-- `409 Conflict` when user is already logged in (active session not expired)
-
-### 5.3 Logout
-
-- Method: `POST`
-- Path: `/auth/logout`
-- Auth required: Yes (Bearer token)
-
-Request header:
-```http
-Authorization: Bearer <accessToken>
-```
-
-Response:
-- `200 OK` with `{"message":"Logged out successfully."}`
-- `401 Unauthorized` when token is missing/invalid
-- `404 Not Found` when user from token does not exist
-
-## 6) Local Development Setup
-
-### 6.1 Prerequisites
+ต้องมี:
 
 - .NET SDK 10
-- Node.js 20+ (LTS recommended)
+- Node.js 20+
 - Docker Desktop
 
-### 6.2 Start Infrastructure
+### 2. Start PostgreSQL และ RabbitMQ
 
-1. Create `.env` from `.env.example` at repo root.
-2. Set compose secrets in `.env`:
-- `DB_USER`
-- `DB_PASS`
-- `DB_NAME`
-- `RABBITMQ_USER`
-- `RABBITMQ_PASS`
-3. Start containers:
+สร้างไฟล์ `.env` จาก `.env.example` แล้วใส่ค่าที่ใช้กับ Docker Compose เช่น database user/password และ RabbitMQ user/password
+
+จากนั้นรัน:
 
 ```powershell
 docker compose up -d
 ```
 
-Services:
+Service ที่จะได้:
+
 - PostgreSQL: `localhost:5433`
-- RabbitMQ AMQP: `localhost:5672`
-- RabbitMQ UI: `http://localhost:15672`
+- RabbitMQ: `localhost:5672`
+- RabbitMQ Management UI: `http://localhost:15672`
 
-### 6.3 Configure API Secrets (User Secrets or Environment Variables)
+### 3. ตั้งค่า backend secrets
 
-The API now fails fast if `ConnectionStrings:Database` or `Jwt:Key` is missing/weak.
-
-Local development using `dotnet user-secrets` (recommended):
+แนะนำให้ใช้ `dotnet user-secrets` เพื่อไม่ต้อง commit secret ลง repo
 
 ```powershell
-dotnet user-secrets --project Server/Application/Api/Api.csproj set "ConnectionStrings:Database" "Host=localhost;Port=5433;Database=AssetManagementDb;Username=postgres;Password=<DB_PASSWORD>"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "ConnectionStrings:Database" "Host=localhost;Port=5433;Database=AssetManagementDb;Username=<DB_USER>;Password=<DB_PASS>"
 dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Issuer" "AssetApi"
 dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Audience" "AssetFrontend"
 dotnet user-secrets --project Server/Application/Api/Api.csproj set "Jwt:Key" "<RANDOM_KEY_MIN_32_CHARS>"
 dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Host" "amqp://localhost:5672/"
 dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Username" "<RABBITMQ_USER>"
-dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Password" "<RABBITMQ_PASSWORD>"
+dotnet user-secrets --project Server/Application/Api/Api.csproj set "RabbitMQ:Password" "<RABBITMQ_PASS>"
 ```
 
-CI/CD or container runtime can use environment variables:
-- `ConnectionStrings__Database`
-- `Jwt__Issuer`
-- `Jwt__Audience`
-- `Jwt__Key`
-- `RabbitMQ__Host`
-- `RabbitMQ__Username`
-- `RabbitMQ__Password`
+### 4. Apply database migrations
 
-### 6.4 Apply Database Migrations
+ใช้ helper script:
 
-Option A: run per context directly:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Action update -Context all -NoBuild
+```
+
+หรือรัน EF Core แยก context:
 
 ```powershell
 dotnet ef database update --project Server/Modules/Auth/Auth/Auth.csproj --startup-project Server/Application/Api/Api.csproj --context Auth.Data.AuthDbContext
@@ -308,121 +96,84 @@ dotnet ef database update --project Server/Modules/Parameter/Parameter/Parameter
 dotnet ef database update --project Server/Modules/Request/Request/Request.csproj --startup-project Server/Application/Api/Api.csproj --context Request.Data.RequestDbContext
 ```
 
-Option B: use helper script:
+### 5. Run backend
 
 ```powershell
-.\scripts\ef-migrations.ps1 -Action update -Context all
-```
-
-### 6.5 Seed Roles (Required for Sign Up/Login)
-
-There is currently no checked-in `CREATE.sql` seed file in `Server/Modules/Auth/Auth/Data/`.
-
-Insert required roles manually (example):
-
-```sql
-INSERT INTO auth.UserRole (RoleCode, RoleName, RoleDescription)
-VALUES
-('00', 'ADMIN', 'System administrator'),
-('01', 'DEPTHEAD', 'Department head'),
-('02', 'LECTURER', 'Lecturer'),
-('03', 'STUDENT', 'Student');
-```
-
-Adjust role codes/names to match your business rules.
-
-### 6.6 Run Backend
-
-```powershell
-dotnet restore
-dotnet build Server/Application/Api/Api.csproj
+dotnet restore Server.sln
+dotnet build Server.sln
 dotnet run --project Server/Application/Api/Api.csproj
 ```
 
-Default launch URLs:
+Default backend URLs:
+
 - `http://localhost:5176`
 - `https://localhost:7158`
 
-### 6.7 Run Frontend
+ถ้า build ไม่ผ่านเพราะไฟล์ `.dll` ถูก lock ให้หยุด API process ที่รันค้างอยู่ก่อน แล้วค่อย build ใหม่
+
+### 6. Run frontend
+
+เปิด terminal อีกหน้าหนึ่ง:
 
 ```powershell
-cd ClientApp
+cd client
 npm install
 npm run dev
 ```
 
 Default frontend URL:
+
 - `http://localhost:3000`
 
-## 7) Frontend-Backend Auth Integration Notes
+ถ้าต้องการชี้ frontend ไป backend URL อื่น ให้ตั้งค่า:
 
-CORS is now configured in backend with policy `Frontend` and is enabled via `app.UseCors("Frontend")`.
-
-Current development origins:
-- `http://localhost:3000`
-- `http://127.0.0.1:3000`
-
-`appsettings.Development.json` example:
-
-```json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000"
-    ]
-  }
-}
+```powershell
+$env:NEXT_PUBLIC_API_URL="http://localhost:5176"
+npm run dev
 ```
 
-Frontend integration checklist:
-- Replace mock login in `ClientApp/app/contexts/AuthContext.tsx` with API call to `/auth/login`.
-- Use `email/password` for login payload.
-- Persist `accessToken` and send `Authorization: Bearer <token>` to protected endpoints like `/auth/logout`.
-- Map backend `roleCode`/`roleName` to frontend role model.
+## คำสั่งที่ใช้บ่อย
 
-## 8) Configuration
+Backend:
 
-Main files:
-- `Server/Application/Api/appsettings.json`
-- `Server/Application/Api/appsettings.Development.json`
-- `Server/Application/Api/Properties/launchSettings.json`
-- `.env`
-- `.env.example`
+```powershell
+dotnet restore Server.sln
+dotnet build Server.sln
+dotnet run --project Server/Application/Api/Api.csproj
+```
 
-Secret policy:
-- Do not commit secrets in `appsettings*.json`.
-- Use `dotnet user-secrets` for local development.
-- Use environment variables / secret manager in deployment.
+Frontend:
 
-Important JWT settings:
-- `Jwt:Issuer`
-- `Jwt:Audience`
-- `Jwt:Key` (must be strong and secret in production)
-- `Jwt:AccessTokenMinutes`
+```powershell
+cd client
+npm run dev
+npm run build
+npm run lint
+```
 
-## 9) Security Notes
+Infrastructure:
 
-- Auth uses JWT bearer tokens.
-- Duplicate login is blocked using `Session` and `SessionActiveOn` fields in `auth.UserName`.
-- Logout clears server-side session state.
-- Access tokens remain valid until expiration unless revocation/blacklist is added.
-- JWT key rotation:
-1. Generate a new key (at least 32 chars, random).
-2. Update `Jwt__Key` in secret manager/environment.
-3. Restart API instances.
-4. Existing tokens signed with old key become invalid after rotation.
+```powershell
+docker compose up -d
+docker compose down
+```
 
-## 10) Known Gaps / Next Steps
+Migrations:
 
-- Implement `GET /auth/me`
-- Add role-based authorization policies per endpoint
-- Add rate limiting (global and login-specific)
-- Complete Asset/Request/Notification workflows
-- Add refresh token and token revocation strategy for production-grade auth
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ef-migrations.ps1 -Action update -Context all -NoBuild
+```
 
-## 11) Frontend README
+## หมายเหตุสำหรับการพัฒนา
 
-Frontend-specific quick notes are also available at:
-- `ClientApp/README.md`
+- ห้าม commit secret ใน `.env` หรือ `appsettings*.json`
+- Backend secret ควรเก็บผ่าน `dotnet user-secrets`
+- ถ้าแก้ backend ขณะ API ยังรันอยู่ อาจต้อง restart API เพื่อให้โหลด DLL ใหม่
+- ตอนนี้ยังไม่มี test project ที่ commit ไว้ ให้ใช้ `dotnet build Server.sln`, `npm run build`, และ `npm run lint` เป็น minimum verification
 
+## Known Gaps
+
+- ยังไม่มี automated test suite
+- Refresh token/revocation strategy ยังไม่ครบแบบ production-grade
+- บาง endpoint ยังต้องเพิ่ม authorization policy ให้ละเอียดขึ้น
+- UX หลังคืน asset ของ borrow request ยังปรับปรุงต่อได้

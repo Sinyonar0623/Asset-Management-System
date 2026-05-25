@@ -11,5 +11,5 @@ public sealed record AssetUnitDto
     public string AvailabilityStatus { get; init; } = string.Empty;
     public string OperationalStatus { get; init; } = string.Empty;
     public string Remark { get; init; } = string.Empty;
-    public Guid? OwnerId { get; init; }
+    public Guid? ResponsibleUserId { get; init; }
 }

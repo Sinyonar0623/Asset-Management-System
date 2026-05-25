@@ -14,7 +14,7 @@ public class GetParameterByIdEndpoint : ICarterModule
 
             return Results.Ok(response);
 
-        }).WithName("GetRequestById")
+        }).WithName("GetParameterById")
         .Produces<GetParameterByIdResponse>()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .WithSummary("Get Parameter By Id");

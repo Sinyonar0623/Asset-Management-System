@@ -119,13 +119,14 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid?>("OwnerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Remark")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("ResponsibleUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("OwnerId");
 
                     b.Property<string>("SerialNo")
                         .IsRequired()
@@ -206,7 +207,6 @@ namespace Asset.Data.Migrations
             modelBuilder.Entity("Asset.Assets.Model.AssetUnitImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("AssetUnitImageId");
 
@@ -227,6 +227,10 @@ namespace Asset.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("FileName")
                         .HasMaxLength(255)
@@ -289,7 +293,7 @@ namespace Asset.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("TeacherId")
+                    b.Property<Guid?>("TeacherId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("UpdateBy")
@@ -368,62 +372,6 @@ namespace Asset.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Shared.Outbox.Model.Outbox", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("CreateBy")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("SYSTEM");
-
-                    b.Property<DateTime?>("CreateOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Error")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("OccurredOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ProcessedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("integer");
-
-                    b.Property<char>("Status")
-                        .HasColumnType("character(1)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("UpdateBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdateOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OutboxMessages", "asset");
-                });
-
             modelBuilder.Entity("Asset.Assets.Model.Asset", b =>
                 {
                     b.HasOne("Asset.Assets.Model.Laboratory", "Laboratory")
@@ -471,8 +419,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
 
-                            b1.Property<Guid?>("FromOwnerId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid?>("FromResponsibleUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("FromOwnerId");
 
                             b1.Property<DateTime>("PerformedAt")
                                 .HasColumnType("timestamp with time zone");
@@ -489,6 +438,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(500)
                                 .HasColumnType("character varying(500)");
 
+                            b1.Property<Guid?>("RequestId")
+                                .HasColumnType("uuid");
+
                             b1.Property<string>("ToAvailabilityStatus")
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
@@ -497,8 +449,9 @@ namespace Asset.Data.Migrations
                                 .HasMaxLength(20)
                                 .HasColumnType("character varying(20)");
 
-                            b1.Property<Guid?>("ToOwnerId")
-                                .HasColumnType("uuid");
+                            b1.Property<Guid?>("ToResponsibleUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("ToOwnerId");
 
                             b1.HasKey("AssetUnitId", "Id");
 

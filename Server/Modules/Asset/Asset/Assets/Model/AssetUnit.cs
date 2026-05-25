@@ -12,7 +12,7 @@ public class AssetUnit : Aggregate<Guid>
     public string AvailabilityStatus { get; private set; } = null!;
     public string OperationalStatus { get; private set; } = null!;
     public string Remark { get; private set; } = null!;
-    public Guid? OwnerId { get; private set; }
+    public Guid? ResponsibleUserId { get; private set; }
 
     public Asset? Asset { get; private set; }
     public AssetUnitCondition? Condition { get; private set; }
@@ -32,14 +32,14 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
         Name = name;
         Brand = brand;
         Remark = remark;
-        OwnerId = ownerId;
+        ResponsibleUserId = responsibleUserId;
         SetStatuses(availabilityStatus, operationalStatus);
     }
 
@@ -51,7 +51,7 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         return new AssetUnit(
             assetTag,
@@ -61,12 +61,124 @@ public class AssetUnit : Aggregate<Guid>
             availabilityStatus,
             operationalStatus,
             remark,
-            ownerId);
+            responsibleUserId);
     }
 
     public void ChangeStatuses(string availabilityStatus, string operationalStatus)
     {
         SetStatuses(availabilityStatus, operationalStatus);
+    }
+
+    public void Reserve(
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null)
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = null;
+        SetStatuses(AssetUnitStatuses.Availability.Reserved, OperationalStatus);
+
+        AddHistory(
+            "RESERVE",
+            remark ?? "Reserved for request.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void MarkInUse(
+        Guid responsibleUserId,
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null)
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = responsibleUserId;
+        SetStatuses(AssetUnitStatuses.Availability.InUse, AssetUnitStatuses.Operational.Ready);
+
+        AddHistory(
+            "MARK_IN_USE",
+            remark ?? "Marked as in use.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void Release(
+        Guid performedBy,
+        Guid? requestId = null,
+        string? remark = null,
+        string actionType = "RELEASE")
+    {
+        var fromAvailabilityStatus = AvailabilityStatus;
+        var fromOperationalStatus = OperationalStatus;
+        var fromResponsibleUserId = ResponsibleUserId;
+
+        ResponsibleUserId = null;
+        SetStatuses(AssetUnitStatuses.Availability.Available, AssetUnitStatuses.Operational.Ready);
+
+        AddHistory(
+            actionType,
+            remark ?? "Released back to available.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: AvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: OperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: ResponsibleUserId,
+            approvedBy: performedBy == Guid.Empty ? null : performedBy,
+            approvedAt: DateTime.UtcNow,
+            requestId: requestId);
+    }
+
+    public void AddUpdateHistory(
+        Guid performedBy,
+        string fromAvailabilityStatus,
+        string toAvailabilityStatus,
+        string fromOperationalStatus,
+        string toOperationalStatus,
+        Guid? fromResponsibleUserId,
+        Guid? toResponsibleUserId,
+        string? remark = null)
+    {
+        if (fromAvailabilityStatus == toAvailabilityStatus
+            && fromOperationalStatus == toOperationalStatus
+            && fromResponsibleUserId == toResponsibleUserId)
+        {
+            return;
+        }
+
+        AddHistory(
+            "UPDATE",
+            remark ?? "Asset unit status updated.",
+            performedBy,
+            fromAvailabilityStatus: fromAvailabilityStatus,
+            toAvailabilityStatus: toAvailabilityStatus,
+            fromOperationalStatus: fromOperationalStatus,
+            toOperationalStatus: toOperationalStatus,
+            fromResponsibleUserId: fromResponsibleUserId,
+            toResponsibleUserId: toResponsibleUserId);
     }
 
     public void Update(
@@ -77,14 +189,14 @@ public class AssetUnit : Aggregate<Guid>
         string availabilityStatus,
         string operationalStatus,
         string remark,
-        Guid? ownerId)
+        Guid? responsibleUserId)
     {
         AssetTag = assetTag;
         SerialNo = serialNo;
         Name = name;
         Brand = brand;
         Remark = remark;
-        OwnerId = ownerId;
+        ResponsibleUserId = responsibleUserId;
         SetStatuses(availabilityStatus, operationalStatus);
     }
 
@@ -99,8 +211,9 @@ public class AssetUnit : Aggregate<Guid>
         _histories.Add(history);
     }
 
-    public void AddImage(
+    public AssetUnitImage AddImage(
         string imageUrl,
+        string? description = null,
         string? fileName = null,
         string? contentType = null,
         long? fileSizeBytes = null,
@@ -108,6 +221,7 @@ public class AssetUnit : Aggregate<Guid>
     {
         var image = AssetUnitImage.Create(
             imageUrl,
+            description,
             fileName,
             contentType,
             fileSizeBytes,
@@ -122,6 +236,7 @@ public class AssetUnit : Aggregate<Guid>
         }
 
         _images.Add(image);
+        return image;
     }
 
     public void RemoveImage(Guid imageId)
@@ -144,11 +259,12 @@ public class AssetUnit : Aggregate<Guid>
         string? toAvailabilityStatus = null,
         string? fromOperationalStatus = null,
         string? toOperationalStatus = null,
-        Guid? fromOwnerId = null,
-        Guid? toOwnerId = null,
+        Guid? fromResponsibleUserId = null,
+        Guid? toResponsibleUserId = null,
         Guid? approvedBy = null,
         DateTime? approvedAt = null,
-        string? referenceNo = null)
+        string? referenceNo = null,
+        Guid? requestId = null)
     {
         _histories.Add(AssetHistory.Create(
             actionType,
@@ -159,11 +275,12 @@ public class AssetUnit : Aggregate<Guid>
             toAvailabilityStatus,
             fromOperationalStatus,
             toOperationalStatus,
-            fromOwnerId,
-            toOwnerId,
+            fromResponsibleUserId,
+            toResponsibleUserId,
             approvedBy,
             approvedAt,
-            referenceNo));
+            referenceNo,
+            requestId));
     }
 
     public void SetCondition(

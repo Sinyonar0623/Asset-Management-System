@@ -54,11 +54,6 @@ namespace Request.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<string>("RequestNo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
                     b.Property<string>("RequestType")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -81,6 +76,9 @@ namespace Request.Data.Migrations
                     b.Property<DateTime>("SubmittedOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("TargetLaboratoryId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("UpdateBy")
                         .HasColumnType("text");
 
@@ -89,10 +87,9 @@ namespace Request.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RequestNo")
-                        .IsUnique();
-
                     b.HasIndex("RequesterId");
+
+                    b.HasIndex("TargetLaboratoryId");
 
                     b.HasIndex("Status", "NextApproverId");
 
@@ -157,62 +154,6 @@ namespace Request.Data.Migrations
                     b.ToTable("RequestDetails", "request");
                 });
 
-            modelBuilder.Entity("Shared.Outbox.Model.Outbox", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("CreateBy")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("SYSTEM");
-
-                    b.Property<DateTime?>("CreateOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Error")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("OccurredOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ProcessedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("integer");
-
-                    b.Property<char>("Status")
-                        .HasColumnType("character(1)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("UpdateBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdateOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OutboxMessages", "request");
-                });
-
             modelBuilder.Entity("Request.Requests.Model.Request", b =>
                 {
                     b.OwnsMany("Request.Requests.Model.RequestItem", "Items", b1 =>
@@ -226,18 +167,18 @@ namespace Request.Data.Migrations
                             b1.Property<Guid>("AssetId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Note")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)");
-
-                            b1.Property<int?>("QuantityApproved")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("QuantityRequested")
-                                .HasColumnType("integer");
+                            b1.Property<DateTime>("CreatedAt")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                             b1.Property<Guid>("RequestId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("UpdatedAt")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                             b1.HasKey("Id");
 
@@ -295,7 +236,6 @@ namespace Request.Data.Migrations
                             b1.HasKey("Id");
 
                             b1.HasIndex("RequestId")
-                                .IsUnique()
                                 .HasFilter("\"IsCurrent\" = TRUE");
 
                             b1.HasIndex("AssignedApproverId", "Status");

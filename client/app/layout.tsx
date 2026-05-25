@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
@@ -34,7 +35,10 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            <ParameterProvider>{children}</ParameterProvider>
+            <ParameterProvider>
+              {children}
+              <Toaster />
+            </ParameterProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

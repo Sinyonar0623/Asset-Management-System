@@ -2,6 +2,7 @@ namespace Request.Requests.Model;
 
 public static class RequestTypeCodes
 {
+    public const string Allocate = "ALLOCATE";
     public const string Borrow = "BORROW";
     public const string Repair = "REPAIR";
     public const string Retire = "RETIRE";
@@ -26,8 +27,8 @@ public static class TrackingStatusCodes
     public const string Cancelled = "CANCELLED";
 }
 
-public static class ApproverRoleCodes
+public static class RequestDecisionCodes
 {
-    public const string Teacher = "TEACHER";
-    public const string Hod = "HOD";
+    public const string Approve = "APPROVE";
+    public const string Reject = "REJECT";
 }
